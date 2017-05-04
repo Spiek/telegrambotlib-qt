@@ -8,10 +8,6 @@
 
 #include <QUrlQuery>
 
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
-
 #include <QNetworkReply>
 #include <QNetworkAccessManager>
 
