@@ -26,6 +26,8 @@ class TelegramBot : public QObject
     Q_OBJECT
     signals:
         void newMessage(TelegramBotMessage message);
+        void newInlineQuery(TelegramBotInlineQuery inlineQuery);
+        void newChoosenInlineResult(TelegramBotChosenInlineResult choosenInlineResult);
         void newCallbackQuery(TelegramBotCallbackQuery callbackQuery);
 
     public:
@@ -67,7 +69,7 @@ class TelegramBot : public QObject
         };
 
         TelegramBot(QString apikey, QObject *parent = 0);
-        void sendMessage(QVariant chatId, QString text, TelegramFlags flags = TelegramFlags::NoFlag, int replyToMessageId = 0, TelegramKeyboard keyboard = TelegramKeyboard());
+        void sendMessage(QVariant chatId, QString text, TelegramFlags flags = TelegramFlags::NoFlag, int replyToMessageId = 0, TelegramKeyboardRequest keyboard = TelegramKeyboardRequest());
         void startMessagePulling(uint timeout = 10, uint limit = 100, TelegramPollMessageTypes messageTypes = TelegramPollMessageTypes::All, long offset = 0);
         void stopMessagePulling(bool instantly = false);
 

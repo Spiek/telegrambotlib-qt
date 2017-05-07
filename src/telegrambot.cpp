@@ -2,7 +2,7 @@
 
 TelegramBot::TelegramBot(QString apikey, QObject *parent) : QObject(parent), apiKey(apikey) { }
 
-void TelegramBot::sendMessage(QVariant chatId, QString text, TelegramFlags flags, int replyToMessageId, TelegramKeyboard keyboard)
+void TelegramBot::sendMessage(QVariant chatId, QString text, TelegramFlags flags, int replyToMessageId, TelegramKeyboardRequest keyboard)
 {
     QUrlQuery params;
     params.addQueryItem("chat_id", chatId.toString());
@@ -36,18 +36,18 @@ void TelegramBot::sendMessage(QVariant chatId, QString text, TelegramFlags flags
     else if(!keyboard.isEmpty()) {
         QString keyboardContent = "[";
         bool firstRow = true;
-        for(QList<TelegramBotKeyboardButton>& row : keyboard) {
+        for(QList<TelegramBotKeyboardButtonRequest>& row : keyboard) {
             if(!firstRow) keyboardContent += ",";
             keyboardContent += "[";
             bool firstColumn = true;
-            for(TelegramBotKeyboardButton& column : row) {
+            for(TelegramBotKeyboardButtonRequest& column : row) {
                 keyboardContent += QString("%1{\"text\":\"%2\"").arg(firstColumn ? "" : ",", column.text);
                 if(flags && TelegramFlags::ReplyKeyboardMarkup) {
                     if(!column.requestContact) keyboardContent += QString(",\"request_contact\":%1").arg(column.requestContact ? "true" : "false");
                     if(!column.requestLocation) keyboardContent += QString(",\"request_location\":%1").arg(column.requestLocation ? "true" : "false");
                 } else {
                     if(!column.url.isEmpty()) keyboardContent += QString(",\"url\":\"%1\"").arg(column.url);
-                    if(!column.callBackData.isEmpty()) keyboardContent += QString(",\"callback_data\":\"%1\"").arg(column.callBackData);
+                    if(!column.callbackData.isEmpty()) keyboardContent += QString(",\"callback_data\":\"%1\"").arg(column.callbackData);
                     if(!column.switchInlineQuery.isEmpty()) keyboardContent += QString(",\"switch_inline_query\":\"%1\"").arg(column.switchInlineQuery);
                     if(!column.switchInlineQueryCurrentChat.isEmpty()) keyboardContent += QString(",\"switch_inline_query_current_chat\":\"%1\"").arg(column.switchInlineQueryCurrentChat);
                 }
@@ -156,11 +156,24 @@ void TelegramBot::handlePullResponse()
                                itr.key() == "channel_post"        ? TelegramBotMessage::ChannelPost :
                                itr.key() == "edited_channel_post" ? TelegramBotMessage::EditedChannelPost :
                                                                     TelegramBotMessage::Undefined;
-                qDebug() << message.messageId << message.from.firstName << message.from.username << message.text;
                 emit this->newMessage(message);
             }
 
             // handle inline Query
+            else if(itr.key() == "inline_query") {
+                TelegramBotInlineQuery query;
+                query.fromJson(oMessage);
+                emit this->newInlineQuery(query);
+            }
+
+            // handle choosen inline result
+            else if(itr.key() == "chosen_inline_result") {
+                TelegramBotChosenInlineResult inlineResult;
+                inlineResult.fromJson(oMessage);
+                emit this->newChoosenInlineResult(inlineResult);
+            }
+
+            // handle callback Query
             else if(itr.key() == "callback_query") {
                 TelegramBotCallbackQuery query;
                 query.fromJson(oMessage);

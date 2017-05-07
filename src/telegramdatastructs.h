@@ -7,23 +7,31 @@
 #include "jsonhelper.h"
 #include "telegramdatainterface.h"
 
-struct TelegramBotKeyboardButton
-{
-    // global
-    QString text;
-
-    // inline keyboard
-    QString url;
-    QString callBackData;
-    QString switchInlineQuery;
-    QString switchInlineQueryCurrentChat;
-
-    // normal keyboard
-    bool requestContact;
+#define TELEGRAMBOTKEYBOARD_FIELDS \
+    /* global */ \
+    QString text; \
+     \
+    /* inline keyboard */ \
+    QString url; \
+    QString callbackData; \
+    QString switchInlineQuery; \
+    QString switchInlineQueryCurrentChat; \
+     \
+    /* normal keyboard */ \
+    bool requestContact; \
     bool requestLocation;
-};
 
-typedef QList<QList<TelegramBotKeyboardButton>> TelegramKeyboard;
+struct TelegramBotKeyboardButtonRequest
+{
+    TELEGRAMBOTKEYBOARD_FIELDS
+};
+typedef QList<QList<TelegramBotKeyboardButtonRequest>> TelegramKeyboardRequest;
+
+
+
+/*
+ *  Telegram Game Data Structs
+ */
 
 // TelegramBotUser - This object represents a Telegram user or bot.
 struct TelegramBotUser : public TelegramBotObject {
@@ -38,28 +46,6 @@ struct TelegramBotUser : public TelegramBotObject {
         JsonHelperT<QString>::jsonPathGet(object, "first_name", this->firstName);
         JsonHelperT<QString>::jsonPathGet(object, "last_name", this->lastName, false);
         JsonHelperT<QString>::jsonPathGet(object, "username", this->username, false);
-    }
-};
-
-// TelegramBotChat - This object represents a chat.
-struct TelegramBotChat : public TelegramBotObject {
-    qint32 id; // Unique identifier for this chat. This number may be greater than 32 bits and some programming languages may have difficulty/silent defects in interpreting it. But it is smaller than 52 bits, so a signed 64 bit integer or double-precision float type are safe for storing this identifier.
-    QString type; // Type of chat, can be either “private”, “group”, “supergroup” or “channel”
-    QString title; // Optional. Title, for supergroups, channels and group chats
-    QString username; // Optional. Username, for private chats, supergroups and channels if available
-    QString firstName; // Optional. First name of the other party in a private chat
-    QString lastName; // Optional. Last name of the other party in a private chat
-    bool allMembersAreAdministrators; // Optional. True if a group has ‘All Members Are Admins’ enabled.
-
-    // parse logic
-    virtual void fromJson(QJsonObject& object) {
-        JsonHelperT<qint32>::jsonPathGet(object, "id", this->id);
-        JsonHelperT<QString>::jsonPathGet(object, "type", this->type);
-        JsonHelperT<QString>::jsonPathGet(object, "title", this->title, false);
-        JsonHelperT<QString>::jsonPathGet(object, "username", this->username, false);
-        JsonHelperT<QString>::jsonPathGet(object, "first_name", this->firstName, false);
-        JsonHelperT<QString>::jsonPathGet(object, "last_name", this->lastName, false);
-        JsonHelperT<bool>::jsonPathGet(object, "all_members_are_administrators", this->allMembersAreAdministrators, false);
     }
 };
 
@@ -94,6 +80,102 @@ struct TelegramBotPhotoSize : public TelegramBotObject {
         JsonHelperT<qint32>::jsonPathGet(object, "width", this->width);
         JsonHelperT<qint32>::jsonPathGet(object, "height", this->height);
         JsonHelperT<qint32>::jsonPathGet(object, "file_size", this->fileSize, false);
+    }
+};
+
+// You can provide an animation for your game so that it looks stylish in chats (check out Lumberjack for an example). This object represents an animation file to be displayed in the message containing a game.
+struct TelegramBotAnimation : public TelegramBotObject {
+    QString fileId; // Unique file identifier
+    TelegramBotPhotoSize thumb; // Optional. Animation thumbnail as defined by sender
+    QString fileName; // Optional. Original animation filename as defined by sender
+    QString mimeType; // Optional. MIME type of the file as defined by sender
+    qint32 fileSize; // Optional. File size
+
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<QString>::jsonPathGet(object, "file_id", this->fileId);
+        JsonHelperT<TelegramBotPhotoSize>::jsonPathGet(object, "thumb", this->thumb, false);
+        JsonHelperT<QString>::jsonPathGet(object, "file_name", this->fileName, false);
+        JsonHelperT<QString>::jsonPathGet(object, "mime_type", this->mimeType, false);
+        JsonHelperT<qint32>::jsonPathGet(object, "file_size", this->fileSize, false);
+    }
+};
+
+// This object represents a game. Use BotFather to create and edit games, their short names will act as unique identifiers.
+struct TelegramBotGame : public TelegramBotObject {
+    QString title; // Title of the game
+    QString description; // Description of the game
+    QList<TelegramBotPhotoSize> photo; // Photo that will be displayed in the game message in chats.
+    QString text; // Optional. Brief description of the game or high scores included in the game message. Can be automatically edited to include current high scores for the game when the bot calls setGameScore, or manually edited using editMessageText. 0-4096 characters.
+    QList<TelegramBotMessageEntity> textEntities; // Optional. Special entities that appear in text, such as usernames, URLs, bot commands, etc.
+    TelegramBotAnimation animation; // Optional. Animation that will be displayed in the game message in chats. Upload via BotFather
+
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<QString>::jsonPathGet(object, "title", this->title);
+        JsonHelperT<QString>::jsonPathGet(object, "description", this->description);
+        JsonHelperT<TelegramBotPhotoSize>::jsonPathGetArray(object, "photo", this->photo);
+        JsonHelperT<QString>::jsonPathGet(object, "text", this->text, false);
+        JsonHelperT<TelegramBotMessageEntity>::jsonPathGetArray(object, "text_entities", this->textEntities, false);
+        JsonHelperT<TelegramBotAnimation>::jsonPathGet(object, "animation", this->animation, false);
+    }
+};
+
+// This object represents one row of the high scores table for a game.
+struct TelegramBotGameHighScore : public TelegramBotObject {
+    qint32 position; // Position in high score table for the game
+    TelegramBotUser user; // User
+    qint32 score; // Score
+
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<qint32>::jsonPathGet(object, "position", this->position);
+        JsonHelperT<TelegramBotUser>::jsonPathGet(object, "user", this->user);
+        JsonHelperT<qint32>::jsonPathGet(object, "score", this->score);
+    }
+};
+
+
+
+/*
+ *  Telegram Base Data Structs
+ */
+
+struct TelegramBotKeyboardButton : public TelegramBotObject
+{
+    TELEGRAMBOTKEYBOARD_FIELDS
+    TelegramBotGame callbackGame;
+
+    // parse logic
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<QString>::jsonPathGet(object, "text", this->text);
+        JsonHelperT<QString>::jsonPathGet(object, "url", this->url, false);
+        JsonHelperT<QString>::jsonPathGet(object, "callback_data", this->callbackData, false);
+        JsonHelperT<QString>::jsonPathGet(object, "switch_inline_query", this->switchInlineQuery, false);
+        JsonHelperT<QString>::jsonPathGet(object, "switch_inline_query_current_chat", this->switchInlineQueryCurrentChat, false);
+        JsonHelperT<TelegramBotGame>::jsonPathGet(object, "callback_game", this->callbackGame, false);
+        JsonHelperT<bool>::jsonPathGet(object, "request_contact", this->requestContact, false);
+        JsonHelperT<bool>::jsonPathGet(object, "request_location", this->requestLocation, false);
+    }
+};
+typedef QList<QList<TelegramBotKeyboardButton>> TelegramKeyboard;
+
+// TelegramBotChat - This object represents a chat.
+struct TelegramBotChat : public TelegramBotObject {
+    qint32 id; // Unique identifier for this chat. This number may be greater than 32 bits and some programming languages may have difficulty/silent defects in interpreting it. But it is smaller than 52 bits, so a signed 64 bit integer or double-precision float type are safe for storing this identifier.
+    QString type; // Type of chat, can be either “private”, “group”, “supergroup” or “channel”
+    QString title; // Optional. Title, for supergroups, channels and group chats
+    QString username; // Optional. Username, for private chats, supergroups and channels if available
+    QString firstName; // Optional. First name of the other party in a private chat
+    QString lastName; // Optional. Last name of the other party in a private chat
+    bool allMembersAreAdministrators; // Optional. True if a group has ‘All Members Are Admins’ enabled.
+
+    // parse logic
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<qint32>::jsonPathGet(object, "id", this->id);
+        JsonHelperT<QString>::jsonPathGet(object, "type", this->type);
+        JsonHelperT<QString>::jsonPathGet(object, "title", this->title, false);
+        JsonHelperT<QString>::jsonPathGet(object, "username", this->username, false);
+        JsonHelperT<QString>::jsonPathGet(object, "first_name", this->firstName, false);
+        JsonHelperT<QString>::jsonPathGet(object, "last_name", this->lastName, false);
+        JsonHelperT<bool>::jsonPathGet(object, "all_members_are_administrators", this->allMembersAreAdministrators, false);
     }
 };
 
@@ -301,7 +383,7 @@ struct TelegramBotResponseParameters : public TelegramBotObject {
     QList<TelegramBotMessageEntity> entities; /* Optional. For text messages, special entities like usernames, URLs, bot commands, etc. that appear in the text */\
     TelegramBotAudio audio; /* Optional. Message is an audio file, information about the file */\
     TelegramBotDocument document; /* Optional. Message is a general file, information about the file */\
-    /*Game game; // Optional. Message is a game, information about the game. More about games */\
+    TelegramBotGame game; /* Optional. Message is a game, information about the game. More about games */\
     QList<TelegramBotPhotoSize> photo; /* Optional. Message is a photo, available sizes of the photo */\
     TelegramBotSticker sticker; /* Optional. Message is a sticker, information about the sticker */\
     TelegramBotVideo video; /* Optional. Message is a video, information about the video */\
@@ -340,7 +422,7 @@ struct TelegramBotMessageSingle : public TelegramBotObject {
         JsonHelperT<TelegramBotMessageEntity>::jsonPathGetArray(object, "entities", this->entities, false);
         JsonHelperT<TelegramBotAudio>::jsonPathGet(object, "audio", this->audio, false);
         JsonHelperT<TelegramBotDocument>::jsonPathGet(object, "document", this->document, false);
-        //JsonHelperT<Game>::jsonPathGet(object, "game", this->game);
+        JsonHelperT<TelegramBotGame>::jsonPathGet(object, "game", this->game, false);
         JsonHelperT<TelegramBotPhotoSize>::jsonPathGetArray(object, "photo", this->photo, false);
         JsonHelperT<TelegramBotSticker>::jsonPathGet(object, "sticker", this->sticker, false);
         JsonHelperT<TelegramBotVideo>::jsonPathGet(object, "video", this->video, false);
@@ -394,7 +476,7 @@ struct TelegramBotMessage : public TelegramBotObject {
         JsonHelperT<TelegramBotMessageEntity>::jsonPathGetArray(object, "entities", this->entities, false);
         JsonHelperT<TelegramBotAudio>::jsonPathGet(object, "audio", this->audio, false);
         JsonHelperT<TelegramBotDocument>::jsonPathGet(object, "document", this->document, false);
-        //JsonHelperT<Game>::jsonPathGet(object, "game", this->game);
+        JsonHelperT<TelegramBotGame>::jsonPathGet(object, "game", this->game, false);
         JsonHelperT<TelegramBotPhotoSize>::jsonPathGetArray(object, "photo", this->photo, false);
         JsonHelperT<TelegramBotSticker>::jsonPathGet(object, "sticker", this->sticker, false);
         JsonHelperT<TelegramBotVideo>::jsonPathGet(object, "video", this->video, false);
@@ -439,6 +521,591 @@ struct TelegramBotCallbackQuery : public TelegramBotObject {
         JsonHelperT<QString>::jsonPathGet(object, "chat_instance", this->chatInstance);
         JsonHelperT<QString>::jsonPathGet(object, "data", this->data, false);
         JsonHelperT<QString>::jsonPathGet(object, "game_short_name", this->gameShortName, false);
+    }
+};
+
+/*
+ * Inline Query data structs
+ */
+
+// This object represents an incoming inline query. When the user sends an empty query, your bot could return some default or trending results.
+struct TelegramBotInlineQuery : public TelegramBotObject {
+    QString id; // Unique identifier for this query
+    TelegramBotUser from; // Sender
+    TelegramBotLocation location; // Optional. Sender location, only for bots that request user location
+    QString query; // Text of the query (up to 512 characters)
+    QString offset; // Offset of the results to be returned, can be controlled by the bot
+
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<QString>::jsonPathGet(object, "id", this->id);
+        JsonHelperT<TelegramBotUser>::jsonPathGet(object, "from", this->from);
+        JsonHelperT<TelegramBotLocation>::jsonPathGet(object, "location", this->location, false);
+        JsonHelperT<QString>::jsonPathGet(object, "query", this->query);
+        JsonHelperT<QString>::jsonPathGet(object, "offset", this->offset);
+    }
+};
+
+// Represents the content of a text message to be sent as the result of an inline query.
+struct TelegramBotInputMessageContent : public TelegramBotObject {
+    QString messageText; // Text of the message to be sent, 1-4096 characters
+    QString parseMode; // Optional. Send Markdown or HTML, if you want Telegram apps to show bold, italic, fixed-width text or inline URLs in your bot's message.
+    bool disableWebPagePreview; // Optional. Disables link previews for links in the sent message
+
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<QString>::jsonPathGet(object, "message_text", this->messageText);
+        JsonHelperT<QString>::jsonPathGet(object, "parse_mode", this->parseMode, false);
+        JsonHelperT<bool>::jsonPathGet(object, "disable_web_page_preview", this->disableWebPagePreview, false);
+    }
+};
+
+// This object represents one result of an inline query. Telegram clients currently support results of the following 20 types:
+struct TelegramBotInlineQueryResult : public TelegramBotObject {
+
+    QString type; // Type of the result, must be article
+    QString id; // Unique identifier for this result, 1-64 Bytes
+    QString title; // Title of the result
+    TelegramBotInputMessageContent inputMessageContent; // Content of the message to be sent
+    TelegramKeyboard replyMarkup; // Optional. Inline keyboard attached to the message
+    QString url; // Optional. URL of the result
+    bool hideUrl; // Optional. Pass True, if you don't want the URL to be shown in the message
+    QString description; // Optional. Short description of the result
+    QString thumbUrl; // Optional. Url of the thumbnail for the result
+    qint32 thumbWidth; // Optional. Thumbnail width
+    qint32 thumbHeight; // Optional. Thumbnail height
+
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<QString>::jsonPathGet(object, "type", this->type);
+        JsonHelperT<QString>::jsonPathGet(object, "id", this->id);
+        JsonHelperT<QString>::jsonPathGet(object, "title", this->title);
+        JsonHelperT<TelegramBotInputMessageContent>::jsonPathGet(object, "input_message_content", this->inputMessageContent);
+        JsonHelperT<TelegramBotKeyboardButton>::jsonPathGetArrayArray(object, "reply_markup", this->replyMarkup, false);
+        JsonHelperT<QString>::jsonPathGet(object, "url", this->url, false);
+        JsonHelperT<bool>::jsonPathGet(object, "hide_url", this->hideUrl, false);
+        JsonHelperT<QString>::jsonPathGet(object, "description", this->description, false);
+        JsonHelperT<QString>::jsonPathGet(object, "thumb_url", this->thumbUrl, false);
+        JsonHelperT<qint32>::jsonPathGet(object, "thumb_width", this->thumbWidth, false);
+        JsonHelperT<qint32>::jsonPathGet(object, "thumb_height", this->thumbHeight, false);
+    }
+};
+
+// Represents a link to a photo. By default, this photo will be sent by the user with optional caption. Alternatively, you can use inputMessageContent to send a message with the specified content instead of the photo.
+struct TelegramBotInlineQueryResultPhoto : public TelegramBotObject {
+    QString type; // Type of the result, must be photo
+    QString id; // Unique identifier for this result, 1-64 bytes
+    QString photoUrl; // A valid URL of the photo. Photo must be in jpeg format. Photo size must not exceed 5MB
+    QString thumbUrl; // URL of the thumbnail for the photo
+    qint32 photoWidth; // Optional. Width of the photo
+    qint32 photoHeight; // Optional. Height of the photo
+    QString title; // Optional. Title for the result
+    QString description; // Optional. Short description of the result
+    QString caption; // Optional. Caption of the photo to be sent, 0-200 characters
+    TelegramKeyboard replyMarkup; // Optional. Inline keyboard attached to the message
+    TelegramBotInputMessageContent inputMessageContent; // Optional. Content of the message to be sent instead of the photo
+
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<QString>::jsonPathGet(object, "type", this->type);
+        JsonHelperT<QString>::jsonPathGet(object, "id", this->id);
+        JsonHelperT<QString>::jsonPathGet(object, "photo_url", this->photoUrl);
+        JsonHelperT<QString>::jsonPathGet(object, "thumb_url", this->thumbUrl);
+        JsonHelperT<qint32>::jsonPathGet(object, "photo_width", this->photoWidth, false);
+        JsonHelperT<qint32>::jsonPathGet(object, "photo_height", this->photoHeight, false);
+        JsonHelperT<QString>::jsonPathGet(object, "title", this->title, false);
+        JsonHelperT<QString>::jsonPathGet(object, "description", this->description, false);
+        JsonHelperT<QString>::jsonPathGet(object, "caption", this->caption, false);
+        JsonHelperT<TelegramBotKeyboardButton>::jsonPathGetArrayArray(object, "reply_markup", this->replyMarkup, false);
+        JsonHelperT<TelegramBotInputMessageContent>::jsonPathGet(object, "input_message_content", this->inputMessageContent, false);
+    }
+};
+
+// Represents a link to an animated GIF file. By default, this animated GIF file will be sent by the user with optional caption. Alternatively, you can use inputMessageContent to send a message with the specified content instead of the animation.
+struct TelegramBotInlineQueryResultGif : public TelegramBotObject {
+    QString type; // Type of the result, must be gif
+    QString id; // Unique identifier for this result, 1-64 bytes
+    QString gifUrl; // A valid URL for the GIF file. File size must not exceed 1MB
+    qint32 gifWidth; // Optional. Width of the GIF
+    qint32 gifHeight; // Optional. Height of the GIF
+    QString thumbUrl; // URL of the static thumbnail for the result (jpeg or gif)
+    QString title; // Optional. Title for the result
+    QString caption; // Optional. Caption of the GIF file to be sent, 0-200 characters
+    TelegramKeyboard replyMarkup; // Optional. Inline keyboard attached to the message
+    TelegramBotInputMessageContent inputMessageContent; // Optional. Content of the message to be sent instead of the GIF animation
+
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<QString>::jsonPathGet(object, "type", this->type);
+        JsonHelperT<QString>::jsonPathGet(object, "id", this->id);
+        JsonHelperT<QString>::jsonPathGet(object, "gif_url", this->gifUrl);
+        JsonHelperT<qint32>::jsonPathGet(object, "gif_width", this->gifWidth);
+        JsonHelperT<qint32>::jsonPathGet(object, "gif_height", this->gifHeight);
+        JsonHelperT<QString>::jsonPathGet(object, "thumb_url", this->thumbUrl);
+        JsonHelperT<QString>::jsonPathGet(object, "title", this->title, false);
+        JsonHelperT<QString>::jsonPathGet(object, "caption", this->caption, false);
+        JsonHelperT<TelegramBotKeyboardButton>::jsonPathGetArrayArray(object, "reply_markup", this->replyMarkup, false);
+        JsonHelperT<TelegramBotInputMessageContent>::jsonPathGet(object, "input_message_content", this->inputMessageContent, false);
+    }
+};
+
+// Represents a link to a video animation (H.264/MPEG-4 AVC video without sound). By default, this animated MPEG-4 file will be sent by the user with optional caption. Alternatively, you can use inputMessageContent to send a message with the specified content instead of the animation.
+struct TelegramBotInlineQueryResultMpeg4Gif : public TelegramBotObject {
+    QString type; // Type of the result, must be mpeg4_gif
+    QString id; // Unique identifier for this result, 1-64 bytes
+    QString mpeg4Url; // A valid URL for the MP4 file. File size must not exceed 1MB
+    qint32 mpeg4Width; // Optional. Video width
+    qint32 mpeg4Height; // Optional. Video height
+    QString thumbUrl; // URL of the static thumbnail (jpeg or gif) for the result
+    QString title; // Optional. Title for the result
+    QString caption; // Optional. Caption of the MPEG-4 file to be sent, 0-200 characters
+    TelegramKeyboard replyMarkup; // Optional. Inline keyboard attached to the message
+    TelegramBotInputMessageContent inputMessageContent; // Optional. Content of the message to be sent instead of the video animation
+
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<QString>::jsonPathGet(object, "type", this->type);
+        JsonHelperT<QString>::jsonPathGet(object, "id", this->id);
+        JsonHelperT<QString>::jsonPathGet(object, "mpeg4Url", this->mpeg4Url);
+        JsonHelperT<qint32>::jsonPathGet(object, "mpeg4Width", this->mpeg4Width);
+        JsonHelperT<qint32>::jsonPathGet(object, "mpeg4Height", this->mpeg4Height);
+        JsonHelperT<QString>::jsonPathGet(object, "thumb_url", this->thumbUrl);
+        JsonHelperT<QString>::jsonPathGet(object, "title", this->title, false);
+        JsonHelperT<QString>::jsonPathGet(object, "caption", this->caption, false);
+        JsonHelperT<TelegramBotKeyboardButton>::jsonPathGetArrayArray(object, "reply_markup", this->replyMarkup, false);
+        JsonHelperT<TelegramBotInputMessageContent>::jsonPathGet(object, "input_message_content", this->inputMessageContent, false);
+    }
+};
+
+// Represents a link to a page containing an embedded video player or a video file. By default, this video file will be sent by the user with an optional caption. Alternatively, you can use inputMessageContent to send a message with the specified content instead of the video.
+struct TelegramBotInlineQueryResultVideo : public TelegramBotObject {
+    QString type; // Type of the result, must be video
+    QString id; // Unique identifier for this result, 1-64 bytes
+    QString videoUrl; // A valid URL for the embedded video player or video file
+    QString mimeType; // Mime type of the content of video url, “text/html” or “video/mp4”
+    QString thumbUrl; // URL of the thumbnail (jpeg only) for the video
+    QString title; // Title for the result
+    QString caption; // Optional. Caption of the video to be sent, 0-200 characters
+    qint32 videoWidth; // Optional. Video width
+    qint32 videoHeight; // Optional. Video height
+    qint32 videoDuration; // Optional. Video duration in seconds
+    QString description; // Optional. Short description of the result
+    TelegramKeyboard replyMarkup; // Optional. Inline keyboard attached to the message
+    TelegramBotInputMessageContent inputMessageContent; // Optional. Content of the message to be sent instead of the video
+
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<QString>::jsonPathGet(object, "type", this->type);
+        JsonHelperT<QString>::jsonPathGet(object, "id", this->id);
+        JsonHelperT<QString>::jsonPathGet(object, "video_url", this->videoUrl);
+        JsonHelperT<QString>::jsonPathGet(object, "mime_type", this->mimeType);
+        JsonHelperT<QString>::jsonPathGet(object, "thumb_url", this->thumbUrl);
+        JsonHelperT<QString>::jsonPathGet(object, "title", this->title);
+        JsonHelperT<QString>::jsonPathGet(object, "caption", this->caption, false);
+        JsonHelperT<qint32>::jsonPathGet(object, "video_width", this->videoWidth, false);
+        JsonHelperT<qint32>::jsonPathGet(object, "video_height", this->videoHeight, false);
+        JsonHelperT<qint32>::jsonPathGet(object, "video_duration", this->videoDuration, false);
+        JsonHelperT<QString>::jsonPathGet(object, "description", this->description, false);
+        JsonHelperT<TelegramBotKeyboardButton>::jsonPathGetArrayArray(object, "reply_markup", this->replyMarkup, false);
+        JsonHelperT<TelegramBotInputMessageContent>::jsonPathGet(object, "input_message_content", this->inputMessageContent, false);
+    }
+};
+
+// Represents a link to an mp3 audio file. By default, this audio file will be sent by the user. Alternatively, you can use inputMessageContent to send a message with the specified content instead of the audio.
+struct TelegramBotInlineQueryResultAudio : public TelegramBotObject {
+    QString type; // Type of the result, must be audio
+    QString id; // Unique identifier for this result, 1-64 bytes
+    QString audioUrl; // A valid URL for the audio file
+    QString title; // Title
+    QString caption; // Optional. Caption, 0-200 characters
+    QString performer; // Optional. Performer
+    qint32 audioDuration; // Optional. Audio duration in seconds
+    TelegramKeyboard replyMarkup; // Optional. Inline keyboard attached to the message
+    TelegramBotInputMessageContent inputMessageContent; // Optional. Content of the message to be sent instead of the audio (Note: This will only work in Telegram versions released after 9 April, 2016. Older clients will ignore them.)
+
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<QString>::jsonPathGet(object, "type", this->type);
+        JsonHelperT<QString>::jsonPathGet(object, "id", this->id);
+        JsonHelperT<QString>::jsonPathGet(object, "audio_url", this->audioUrl);
+        JsonHelperT<QString>::jsonPathGet(object, "title", this->title);
+        JsonHelperT<QString>::jsonPathGet(object, "caption", this->caption, false);
+        JsonHelperT<QString>::jsonPathGet(object, "performer", this->performer, false);
+        JsonHelperT<qint32>::jsonPathGet(object, "audio_duration", this->audioDuration, false);
+        JsonHelperT<TelegramBotKeyboardButton>::jsonPathGetArrayArray(object, "reply_markup", this->replyMarkup, false);
+        JsonHelperT<TelegramBotInputMessageContent>::jsonPathGet(object, "input_message_content", this->inputMessageContent, false);
+    }
+};
+
+// Represents a link to a voice recording in an .ogg container encoded with OPUS. By default, this voice recording will be sent by the user. Alternatively, you can use inputMessageContent to send a message with the specified content instead of the the voice message.
+struct TelegramBotInlineQueryResultVoice : public TelegramBotObject {
+    QString type; // Type of the result, must be voice
+    QString id; // Unique identifier for this result, 1-64 bytes
+    QString voiceUrl; // A valid URL for the voice recording
+    QString title; // Recording title
+    QString caption; // Optional. Caption, 0-200 characters
+    qint32 voiceDuration; // Optional. Recording duration in seconds
+    TelegramKeyboard replyMarkup; // Optional. Inline keyboard attached to the message
+    TelegramBotInputMessageContent inputMessageContent; // Optional. Content of the message to be sent instead of the voice recording (Note: This will only work in Telegram versions released after 9 April, 2016. Older clients will ignore them.)
+
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<QString>::jsonPathGet(object, "type", this->type);
+        JsonHelperT<QString>::jsonPathGet(object, "id", this->id);
+        JsonHelperT<QString>::jsonPathGet(object, "voice_url", this->voiceUrl);
+        JsonHelperT<QString>::jsonPathGet(object, "title", this->title);
+        JsonHelperT<QString>::jsonPathGet(object, "caption", this->caption, false);
+        JsonHelperT<qint32>::jsonPathGet(object, "voice_duration", this->voiceDuration, false);
+        JsonHelperT<TelegramBotKeyboardButton>::jsonPathGetArrayArray(object, "reply_markup", this->replyMarkup, false);
+        JsonHelperT<TelegramBotInputMessageContent>::jsonPathGet(object, "input_message_content", this->inputMessageContent, false);
+    }
+};
+
+// Represents a link to a file. By default, this file will be sent by the user with an optional caption. Alternatively, you can use inputMessageContent to send a message with the specified content instead of the file. Currently, only .PDF and .ZIP files can be sent using this method.
+struct TelegramBotInlineQueryResultDocument : public TelegramBotObject {
+    QString type; // Type of the result, must be document
+    QString id; // Unique identifier for this result, 1-64 bytes
+    QString title; // Title for the result
+    QString caption; // Optional. Caption of the document to be sent, 0-200 characters
+    QString documentUrl; // A valid URL for the file
+    QString mimeType; // Mime type of the content of the file, either “application/pdf” or “application/zip”
+    QString description; // Optional. Short description of the result
+    TelegramKeyboard replyMarkup; // Optional. Inline keyboard attached to the message
+    TelegramBotInputMessageContent inputMessageContent; // Optional. Content of the message to be sent instead of the file
+    QString thumbUrl; // Optional. URL of the thumbnail (jpeg only) for the file
+    qint32 thumbWidth; // Optional. Thumbnail width
+    qint32 thumbHeight; // Optional. Thumbnail height (Note: This will only work in Telegram versions released after 9 April, 2016. Older clients will ignore them.)
+
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<QString>::jsonPathGet(object, "type", this->type);
+        JsonHelperT<QString>::jsonPathGet(object, "id", this->id);
+        JsonHelperT<QString>::jsonPathGet(object, "title", this->title);
+        JsonHelperT<QString>::jsonPathGet(object, "caption", this->caption);
+        JsonHelperT<QString>::jsonPathGet(object, "document_url", this->documentUrl);
+        JsonHelperT<QString>::jsonPathGet(object, "mime_type", this->mimeType);
+        JsonHelperT<QString>::jsonPathGet(object, "description", this->description, false);
+        JsonHelperT<TelegramBotKeyboardButton>::jsonPathGetArrayArray(object, "reply_markup", this->replyMarkup, false);
+        JsonHelperT<TelegramBotInputMessageContent>::jsonPathGet(object, "input_message_content", this->inputMessageContent, false);
+        JsonHelperT<QString>::jsonPathGet(object, "thumb_url", this->thumbUrl, false);
+        JsonHelperT<qint32>::jsonPathGet(object, "thumb_width", this->thumbWidth, false);
+        JsonHelperT<qint32>::jsonPathGet(object, "thumb_height", this->thumbHeight, false);
+    }
+};
+
+// Represents a location on a map. By default, the location will be sent by the user. Alternatively, you can use inputMessageContent to send a message with the specified content instead of the location.
+struct TelegramBotInlineQueryResultLocation : public TelegramBotObject {
+    QString type; // Type of the result, must be location
+    QString id; // Unique identifier for this result, 1-64 Bytes
+    double latitude; // Location latitude in degrees
+    double longitude; // Location longitude in degrees
+    QString title; // Location title
+    TelegramKeyboard replyMarkup; // Optional. Inline keyboard attached to the message
+    TelegramBotInputMessageContent inputMessageContent; // Optional. Content of the message to be sent instead of the location
+    QString thumbUrl; // Optional. Url of the thumbnail for the result
+    qint32 thumbWidth; // Optional. Thumbnail width
+    qint32 thumbHeight; // Optional. Thumbnail height (Note: This will only work in Telegram versions released after 9 April, 2016. Older clients will ignore them.)
+
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<QString>::jsonPathGet(object, "type", this->type);
+        JsonHelperT<QString>::jsonPathGet(object, "id", this->id);
+        JsonHelperT<double>::jsonPathGet(object, "latitude", this->latitude);
+        JsonHelperT<double>::jsonPathGet(object, "longitude", this->longitude);
+        JsonHelperT<QString>::jsonPathGet(object, "title", this->title);
+        JsonHelperT<TelegramBotKeyboardButton>::jsonPathGetArrayArray(object, "reply_markup", this->replyMarkup, false);
+        JsonHelperT<TelegramBotInputMessageContent>::jsonPathGet(object, "input_message_content", this->inputMessageContent, false);
+        JsonHelperT<QString>::jsonPathGet(object, "thumb_url", this->thumbUrl, false);
+        JsonHelperT<qint32>::jsonPathGet(object, "thumb_width", this->thumbWidth, false);
+        JsonHelperT<qint32>::jsonPathGet(object, "thumb_height", this->thumbHeight, false);
+    }
+};
+
+// Represents a venue. By default, the venue will be sent by the user. Alternatively, you can use inputMessageContent to send a message with the specified content instead of the venue.
+struct TelegramBotInlineQueryResultVenue : public TelegramBotObject {
+    QString type; // Type of the result, must be venue
+    QString id; // Unique identifier for this result, 1-64 Bytes
+    double latitude; // Latitude of the venue location in degrees
+    double longitude; // Longitude of the venue location in degrees
+    QString title; // Title of the venue
+    QString address; // Address of the venue
+    QString foursquareId; // Optional. Foursquare identifier of the venue if known
+    TelegramKeyboard replyMarkup; // Optional. Inline keyboard attached to the message
+    TelegramBotInputMessageContent inputMessageContent; // Optional. Content of the message to be sent instead of the venue
+    QString thumbUrl; // Optional. Url of the thumbnail for the result
+    qint32 thumbWidth; // Optional. Thumbnail width
+    qint32 thumbHeight; // Optional. Thumbnail height (Note: This will only work in Telegram versions released after 9 April, 2016. Older clients will ignore them.)
+
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<QString>::jsonPathGet(object, "type", this->type);
+        JsonHelperT<QString>::jsonPathGet(object, "id", this->id);
+        JsonHelperT<double>::jsonPathGet(object, "latitude", this->latitude);
+        JsonHelperT<double>::jsonPathGet(object, "longitude", this->longitude);
+        JsonHelperT<QString>::jsonPathGet(object, "title", this->title);
+        JsonHelperT<QString>::jsonPathGet(object, "address", this->address);
+        JsonHelperT<QString>::jsonPathGet(object, "foursquare_id", this->foursquareId, false);
+        JsonHelperT<TelegramBotKeyboardButton>::jsonPathGetArrayArray(object, "reply_markup", this->replyMarkup, false);
+        JsonHelperT<TelegramBotInputMessageContent>::jsonPathGet(object, "input_message_content", this->inputMessageContent, false);
+        JsonHelperT<QString>::jsonPathGet(object, "thumb_url", this->thumbUrl, false);
+        JsonHelperT<qint32>::jsonPathGet(object, "thumb_width", this->thumbWidth, false);
+        JsonHelperT<qint32>::jsonPathGet(object, "thumb_height", this->thumbHeight, false);
+    }
+};
+
+// Represents a contact with a phone number. By default, this contact will be sent by the user. Alternatively, you can use inputMessageContent to send a message with the specified content instead of the contact.
+struct TelegramBotInlineQueryResultContact : public TelegramBotObject {
+    QString type; // Type of the result, must be contact
+    QString id; // Unique identifier for this result, 1-64 Bytes
+    QString phoneNumber; // Contact's phone number
+    QString firstName; // Contact's first name
+    QString lastName; // Optional. Contact's last name
+    TelegramKeyboard replyMarkup; // Optional. Inline keyboard attached to the message
+    TelegramBotInputMessageContent inputMessageContent; // Optional. Content of the message to be sent instead of the contact
+    QString thumbUrl; // Optional. Url of the thumbnail for the result
+    qint32 thumbWidth; // Optional. Thumbnail width
+    qint32 thumbHeight; // Optional. Thumbnail height (Note: This will only work in Telegram versions released after 9 April, 2016. Older clients will ignore them.)
+
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<QString>::jsonPathGet(object, "type", this->type);
+        JsonHelperT<QString>::jsonPathGet(object, "id", this->id);
+        JsonHelperT<QString>::jsonPathGet(object, "phone_number", this->phoneNumber);
+        JsonHelperT<QString>::jsonPathGet(object, "first_name", this->firstName);
+        JsonHelperT<QString>::jsonPathGet(object, "last_name", this->lastName, false);
+        JsonHelperT<TelegramBotKeyboardButton>::jsonPathGetArrayArray(object, "reply_markup", this->replyMarkup, false);
+        JsonHelperT<TelegramBotInputMessageContent>::jsonPathGet(object, "input_message_content", this->inputMessageContent, false);
+        JsonHelperT<QString>::jsonPathGet(object, "thumb_url", this->thumbUrl, false);
+        JsonHelperT<qint32>::jsonPathGet(object, "thumb_width", this->thumbWidth, false);
+        JsonHelperT<qint32>::jsonPathGet(object, "thumb_height", this->thumbHeight, false);
+    }
+};
+
+// Represents a Game.
+struct TelegramBotInlineQueryResultGame : public TelegramBotObject {
+    QString type; // Type of the result, must be game
+    QString id; // Unique identifier for this result, 1-64 bytes
+    QString gameShortName; // Short name of the game
+    TelegramKeyboard replyMarkup; // Optional. Inline keyboard attached to the message (Note: This will only work in Telegram versions released after October 1, 2016. Older clients will not display any inline results if a game result is among them.)
+
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<QString>::jsonPathGet(object, "type", this->type);
+        JsonHelperT<QString>::jsonPathGet(object, "id", this->id);
+        JsonHelperT<QString>::jsonPathGet(object, "game_short_name", this->gameShortName);
+        JsonHelperT<TelegramBotKeyboardButton>::jsonPathGetArrayArray(object, "reply_markup", this->replyMarkup, false);
+    }
+};
+
+// Represents a link to a photo stored on the Telegram servers. By default, this photo will be sent by the user with an optional caption. Alternatively, you can use inputMessageContent to send a message with the specified content instead of the photo.
+struct TelegramBotInlineQueryResultCachedPhoto : public TelegramBotObject {
+    QString type; // Type of the result, must be photo
+    QString id; // Unique identifier for this result, 1-64 bytes
+    QString photoFileId; // A valid file identifier of the photo
+    QString title; // Optional. Title for the result
+    QString description; // Optional. Short description of the result
+    QString caption; // Optional. Caption of the photo to be sent, 0-200 characters
+    TelegramKeyboard replyMarkup; // Optional. Inline keyboard attached to the message
+    TelegramBotInputMessageContent inputMessageContent; // Optional. Content of the message to be sent instead of the photo
+
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<QString>::jsonPathGet(object, "type", this->type);
+        JsonHelperT<QString>::jsonPathGet(object, "id", this->id);
+        JsonHelperT<QString>::jsonPathGet(object, "photo_file_id", this->photoFileId);
+        JsonHelperT<QString>::jsonPathGet(object, "title", this->title, false);
+        JsonHelperT<QString>::jsonPathGet(object, "description", this->description, false);
+        JsonHelperT<QString>::jsonPathGet(object, "caption", this->caption, false);
+        JsonHelperT<TelegramBotKeyboardButton>::jsonPathGetArrayArray(object, "reply_markup", this->replyMarkup, false);
+        JsonHelperT<TelegramBotInputMessageContent>::jsonPathGet(object, "input_message_content", this->inputMessageContent, false);
+    }
+};
+
+// Represents a link to an animated GIF file stored on the Telegram servers. By default, this animated GIF file will be sent by the user with an optional caption. Alternatively, you can use inputMessageContent to send a message with specified content instead of the animation.
+struct TelegramBotInlineQueryResultCachedGif : public TelegramBotObject {
+    QString type; // Type of the result, must be gif
+    QString id; // Unique identifier for this result, 1-64 bytes
+    QString gifFileId; // A valid file identifier for the GIF file
+    QString title; // Optional. Title for the result
+    QString caption; // Optional. Caption of the GIF file to be sent, 0-200 characters
+    TelegramKeyboard replyMarkup; // Optional. Inline keyboard attached to the message
+    TelegramBotInputMessageContent inputMessageContent; // Optional. Content of the message to be sent instead of the GIF animation
+
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<QString>::jsonPathGet(object, "type", this->type);
+        JsonHelperT<QString>::jsonPathGet(object, "id", this->id);
+        JsonHelperT<QString>::jsonPathGet(object, "gif_file_id", this->gifFileId);
+        JsonHelperT<QString>::jsonPathGet(object, "title", this->title, false);
+        JsonHelperT<QString>::jsonPathGet(object, "caption", this->caption, false);
+        JsonHelperT<TelegramBotKeyboardButton>::jsonPathGetArrayArray(object, "reply_markup", this->replyMarkup, false);
+        JsonHelperT<TelegramBotInputMessageContent>::jsonPathGet(object, "input_message_content", this->inputMessageContent, false);
+    }
+};
+
+// Represents a link to a video animation (H.264/MPEG-4 AVC video without sound) stored on the Telegram servers. By default, this animated MPEG-4 file will be sent by the user with an optional caption. Alternatively, you can use inputMessageContent to send a message with the specified content instead of the animation.
+struct TelegramBotInlineQueryResultCachedMpeg4Gif : public TelegramBotObject {
+    QString type; // Type of the result, must be mpeg4_gif
+    QString id; // Unique identifier for this result, 1-64 bytes
+    QString mpeg4FileId; // A valid file identifier for the MP4 file
+    QString title; // Optional. Title for the result
+    QString caption; // Optional. Caption of the MPEG-4 file to be sent, 0-200 characters
+    TelegramKeyboard replyMarkup; // Optional. Inline keyboard attached to the message
+    TelegramBotInputMessageContent inputMessageContent; // Optional. Content of the message to be sent instead of the video animation
+
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<QString>::jsonPathGet(object, "type", this->type);
+        JsonHelperT<QString>::jsonPathGet(object, "id", this->id);
+        JsonHelperT<QString>::jsonPathGet(object, "mpeg4FileId", this->mpeg4FileId);
+        JsonHelperT<QString>::jsonPathGet(object, "title", this->title, false);
+        JsonHelperT<QString>::jsonPathGet(object, "caption", this->caption, false);
+        JsonHelperT<TelegramBotKeyboardButton>::jsonPathGetArrayArray(object, "reply_markup", this->replyMarkup, false);
+        JsonHelperT<TelegramBotInputMessageContent>::jsonPathGet(object, "input_message_content", this->inputMessageContent, false);
+    }
+};
+
+// Represents a link to a sticker stored on the Telegram servers. By default, this sticker will be sent by the user. Alternatively, you can use inputMessageContent to send a message with the specified content instead of the sticker.
+struct TelegramBotInlineQueryResultCachedSticker : public TelegramBotObject {
+    QString type; // Type of the result, must be sticker
+    QString id; // Unique identifier for this result, 1-64 bytes
+    QString stickerFileId; // A valid file identifier of the sticker
+    TelegramKeyboard replyMarkup; // Optional. Inline keyboard attached to the message
+    TelegramBotInputMessageContent inputMessageContent; // Optional. Content of the message to be sent instead of the sticker (Note: This will only work in Telegram versions released after 9 April, 2016. Older clients will ignore them.)
+
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<QString>::jsonPathGet(object, "type", this->type);
+        JsonHelperT<QString>::jsonPathGet(object, "id", this->id);
+        JsonHelperT<QString>::jsonPathGet(object, "sticker_file_id", this->stickerFileId);
+        JsonHelperT<TelegramBotKeyboardButton>::jsonPathGetArrayArray(object, "reply_markup", this->replyMarkup, false);
+        JsonHelperT<TelegramBotInputMessageContent>::jsonPathGet(object, "input_message_content", this->inputMessageContent, false);
+    }
+};
+
+// Represents a link to a file stored on the Telegram servers. By default, this file will be sent by the user with an optional caption. Alternatively, you can use inputMessageContent to send a message with the specified content instead of the file.
+struct TelegramBotInlineQueryResultCachedDocument : public TelegramBotObject {
+    QString type; // Type of the result, must be document
+    QString id; // Unique identifier for this result, 1-64 bytes
+    QString title; // Title for the result
+    QString documentFileId; // A valid file identifier for the file
+    QString description; // Optional. Short description of the result
+    QString caption; // Optional. Caption of the document to be sent, 0-200 characters
+    TelegramKeyboard replyMarkup; // Optional. Inline keyboard attached to the message
+    TelegramBotInputMessageContent inputMessageContent; // Optional. Content of the message to be sent instead of the file (Note: This will only work in Telegram versions released after 9 April, 2016. Older clients will ignore them.)
+
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<QString>::jsonPathGet(object, "type", this->type);
+        JsonHelperT<QString>::jsonPathGet(object, "id", this->id);
+        JsonHelperT<QString>::jsonPathGet(object, "title", this->title);
+        JsonHelperT<QString>::jsonPathGet(object, "document_file_id", this->documentFileId);
+        JsonHelperT<QString>::jsonPathGet(object, "description", this->description, false);
+        JsonHelperT<QString>::jsonPathGet(object, "caption", this->caption, false);
+        JsonHelperT<TelegramBotKeyboardButton>::jsonPathGetArrayArray(object, "reply_markup", this->replyMarkup, false);
+        JsonHelperT<TelegramBotInputMessageContent>::jsonPathGet(object, "input_message_content", this->inputMessageContent, false);
+    }
+};
+
+// Represents a link to a video file stored on the Telegram servers. By default, this video file will be sent by the user with an optional caption. Alternatively, you can use inputMessageContent to send a message with the specified content instead of the video.
+struct TelegramBotInlineQueryResultCachedVideo : public TelegramBotObject {
+    QString type; // Type of the result, must be video
+    QString id; // Unique identifier for this result, 1-64 bytes
+    QString videoFileId; // A valid file identifier for the video file
+    QString title; // Title for the result
+    QString description; // Optional. Short description of the result
+    QString caption; // Optional. Caption of the video to be sent, 0-200 characters
+    TelegramKeyboard replyMarkup; // Optional. Inline keyboard attached to the message
+    TelegramBotInputMessageContent inputMessageContent; // Optional. Content of the message to be sent instead of the video
+
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<QString>::jsonPathGet(object, "type", this->type);
+        JsonHelperT<QString>::jsonPathGet(object, "id", this->id);
+        JsonHelperT<QString>::jsonPathGet(object, "video_file_id", this->videoFileId);
+        JsonHelperT<QString>::jsonPathGet(object, "title", this->title);
+        JsonHelperT<QString>::jsonPathGet(object, "description", this->description, false);
+        JsonHelperT<QString>::jsonPathGet(object, "caption", this->caption, false);
+        JsonHelperT<TelegramBotKeyboardButton>::jsonPathGetArrayArray(object, "reply_markup", this->replyMarkup, false);
+        JsonHelperT<TelegramBotInputMessageContent>::jsonPathGet(object, "input_message_content", this->inputMessageContent, false);
+    }
+};
+
+// Represents a link to a voice message stored on the Telegram servers. By default, this voice message will be sent by the user. Alternatively, you can use inputMessageContent to send a message with the specified content instead of the voice message.
+struct TelegramBotInlineQueryResultCachedVoice : public TelegramBotObject {
+    QString type; // Type of the result, must be voice
+    QString id; // Unique identifier for this result, 1-64 bytes
+    QString voiceFileId; // A valid file identifier for the voice message
+    QString title; // Voice message title
+    QString caption; // Optional. Caption, 0-200 characters
+    TelegramKeyboard replyMarkup; // Optional. Inline keyboard attached to the message
+    TelegramBotInputMessageContent inputMessageContent; // Optional. Content of the message to be sent instead of the voice message (Note: This will only work in Telegram versions released after 9 April, 2016. Older clients will ignore them.)
+
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<QString>::jsonPathGet(object, "type", this->type);
+        JsonHelperT<QString>::jsonPathGet(object, "id", this->id);
+        JsonHelperT<QString>::jsonPathGet(object, "voice_file_id", this->voiceFileId);
+        JsonHelperT<QString>::jsonPathGet(object, "title", this->title);
+        JsonHelperT<QString>::jsonPathGet(object, "caption", this->caption, false);
+        JsonHelperT<TelegramBotKeyboardButton>::jsonPathGetArrayArray(object, "reply_markup", this->replyMarkup, false);
+        JsonHelperT<TelegramBotInputMessageContent>::jsonPathGet(object, "input_message_content", this->inputMessageContent, false);
+    }
+};
+
+// Represents a link to an mp3 audio file stored on the Telegram servers. By default, this audio file will be sent by the user. Alternatively, you can use inputMessageContent to send a message with the specified content instead of the audio.
+struct TelegramBotInlineQueryResultCachedAudio : public TelegramBotObject {
+    QString type; // Type of the result, must be audio
+    QString id; // Unique identifier for this result, 1-64 bytes
+    QString audioFileId; // A valid file identifier for the audio file
+    QString caption; // Optional. Caption, 0-200 characters
+    TelegramKeyboard replyMarkup; // Optional. Inline keyboard attached to the message
+    TelegramBotInputMessageContent inputMessageContent; // Optional. Content of the message to be sent instead of the audio (Note: This will only work in Telegram versions released after 9 April, 2016. Older clients will ignore them.)
+
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<QString>::jsonPathGet(object, "type", this->type);
+        JsonHelperT<QString>::jsonPathGet(object, "id", this->id);
+        JsonHelperT<QString>::jsonPathGet(object, "audio_file_id", this->audioFileId);
+        JsonHelperT<QString>::jsonPathGet(object, "caption", this->caption, false);
+        JsonHelperT<TelegramBotKeyboardButton>::jsonPathGetArrayArray(object, "reply_markup", this->replyMarkup, false);
+        JsonHelperT<TelegramBotInputMessageContent>::jsonPathGet(object, "input_message_content", this->inputMessageContent, false);
+    }
+};
+
+// Represents the content of a location message to be sent as the result of an inline query.
+struct TelegramBotInputLocationMessageContent : public TelegramBotObject {
+    double latitude; // Latitude of the location in degrees
+    double longitude; // Longitude of the location in degrees (Note: This will only work in Telegram versions released after 9 April, 2016. Older clients will ignore them.)
+
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<double>::jsonPathGet(object, "latitude", this->latitude);
+        JsonHelperT<double>::jsonPathGet(object, "longitude", this->longitude);
+    }
+};
+
+// Represents the content of a venue message to be sent as the result of an inline query.
+struct TelegramBotInputVenueMessageContent : public TelegramBotObject {
+    double latitude; // Latitude of the venue in degrees
+    double longitude; // Longitude of the venue in degrees
+    QString title; // Name of the venue
+    QString address; // Address of the venue
+    QString foursquareId; // Optional. Foursquare identifier of the venue, if known (Note: This will only work in Telegram versions released after 9 April, 2016. Older clients will ignore them.)
+
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<double>::jsonPathGet(object, "latitude", this->latitude);
+        JsonHelperT<double>::jsonPathGet(object, "longitude", this->longitude);
+        JsonHelperT<QString>::jsonPathGet(object, "title", this->title);
+        JsonHelperT<QString>::jsonPathGet(object, "address", this->address);
+        JsonHelperT<QString>::jsonPathGet(object, "foursquare_id", this->foursquareId, false);
+    }
+};
+
+// Represents the content of a contact message to be sent as the result of an inline query.
+struct TelegramBotInputContactMessageContent : public TelegramBotObject {
+    QString phoneNumber; // Contact's phone number
+    QString firstName; // Contact's first name
+    QString lastName; // Optional. Contact's last name (Note: This will only work in Telegram versions released after 9 April, 2016. Older clients will ignore them.)
+
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<QString>::jsonPathGet(object, "phone_number", this->phoneNumber);
+        JsonHelperT<QString>::jsonPathGet(object, "first_name", this->firstName);
+        JsonHelperT<QString>::jsonPathGet(object, "last_name", this->lastName, false);
+    }
+};
+
+// Represents a result of an inline query that was chosen by the user and sent to their chat partner.
+struct TelegramBotChosenInlineResult : public TelegramBotObject {
+    QString resultId; // The unique identifier for the result that was chosen
+    TelegramBotUser from; // The user that chose the result
+    TelegramBotLocation location; // Optional. Sender location, only for bots that require user location
+    QString inlineMessageId; // Optional. Identifier of the sent inline message. Available only if there is an inline keyboard attached to the message. Will be also received in callback queries and can be used to edit the message.
+    QString query; // The query that was used to obtain the result
+
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<QString>::jsonPathGet(object, "result_id", this->resultId);
+        JsonHelperT<TelegramBotUser>::jsonPathGet(object, "from", this->from);
+        JsonHelperT<TelegramBotLocation>::jsonPathGet(object, "location", this->location, false);
+        JsonHelperT<QString>::jsonPathGet(object, "inline_message_id", this->inlineMessageId, false);
+        JsonHelperT<QString>::jsonPathGet(object, "query", this->query);
     }
 };
 
