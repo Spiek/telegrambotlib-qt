@@ -2,6 +2,7 @@
 #define TELEGRAMBOT_H
 
 #include <QDebug>
+#include <QTimer>
 
 #include <QObject>
 #include <QVariant>
@@ -11,31 +12,38 @@
 #include <QNetworkReply>
 #include <QNetworkAccessManager>
 
-struct TelegramKeyboardButton
-{
-    // global
-    QString text;
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QJsonValue>
+#include <QJsonParseError>
 
-    // inline keyboard
-    QString url;
-    QString callBackData;
-    QString switchInlineQuery;
-    QString switchInlineQueryCurrentChat;
-
-    // normal keyboard
-    bool requestContact;
-    bool requestLocation;
-};
-
-typedef QList<QList<TelegramKeyboardButton>> TelegramKeyboard;
+#include "jsonhelper.h"
+#include "telegramdatastructs.h"
 
 class TelegramBot : public QObject
 {
     Q_OBJECT
+    signals:
+        void newMessage(TelegramBotMessage message);
+        void newCallbackQuery(TelegramBotCallbackQuery callbackQuery);
+
     public:
+        enum TelegramPollMessageTypes
+        {
+            All                 = 0,
+            Message             = 1 << 0,
+            EditedMessage       = 1 << 1,
+            ChannelPost         = 1 << 2,
+            EditedChannelPost   = 1 << 3,
+            InlineQuery         = 1 << 4,
+            ChoosenInlineQuery  = 1 << 5,
+            CallbackQuery       = 1 << 6
+        };
+
         enum TelegramFlags : long long
         {
-            NoFlag                      = 0,
+            NoFlag                       = 0,
 
             // Message
             Markdown                     = 1 << 0,
@@ -60,15 +68,40 @@ class TelegramBot : public QObject
 
         TelegramBot(QString apikey, QObject *parent = 0);
         void sendMessage(QVariant chatId, QString text, TelegramFlags flags = TelegramFlags::NoFlag, int replyToMessageId = 0, TelegramKeyboard keyboard = TelegramKeyboard());
+        void startMessagePulling(uint timeout = 10, uint limit = 100, TelegramPollMessageTypes messageTypes = TelegramPollMessageTypes::All, long offset = 0);
+        void stopMessagePulling(bool instantly = false);
+
+    private slots:
+        void pull();
+        void handlePullResponse();
 
     private:
         // helper
-        QNetworkReply* callApi(QString method, QUrlQuery params = QUrlQuery());
+        QNetworkReply* callApi(QString method, QUrlQuery params = QUrlQuery(), bool deleteOnFinish = true);
 
         QNetworkAccessManager aManager;
         QString apiKey;
+
+        // message poller
+        QNetworkReply* replyPull = 0;
+        QUrlQuery pullParams;
+        long updateId = 0;
 };
 
+/*
+ * TelegramPollMessageTypes - operators
+ */
+inline TelegramBot::TelegramPollMessageTypes operator|(TelegramBot::TelegramPollMessageTypes a, TelegramBot::TelegramPollMessageTypes b)
+{return static_cast<TelegramBot::TelegramPollMessageTypes>(static_cast<int>(a) | static_cast<int>(b));}
+
+// WARNING: override standard behavior: operator && returns true if bit is set, and not if complete equal!
+// Note: this improves code readibility a lot!
+inline bool operator&&(TelegramBot::TelegramPollMessageTypes a, TelegramBot::TelegramPollMessageTypes b)
+{return (static_cast<int>(a) & static_cast<int>(b)) == static_cast<int>(b);}
+
+/*
+ * TelegramFlags - operators
+ */
 inline TelegramBot::TelegramFlags operator|(TelegramBot::TelegramFlags a, TelegramBot::TelegramFlags b)
 {return static_cast<TelegramBot::TelegramFlags>(static_cast<int>(a) | static_cast<int>(b));}
 
