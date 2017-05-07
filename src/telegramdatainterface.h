@@ -27,7 +27,7 @@ class JsonHelperT<T, typename std::enable_if<std::is_base_of<TelegramBotObject, 
             if(array.isEmpty()) return false;
 
             for(auto itr = array.begin(); itr != array.end(); itr++) {
-                JsonHelperT::jsonPathGet(*itr, QString::number(itr.i), *target.insert(target.end(), T{}));
+                JsonHelperT::jsonPathGet(*itr, "", *target.insert(target.end(), T{}));
             }
             return true;
         }
@@ -38,7 +38,7 @@ class JsonHelperT<T, typename std::enable_if<std::is_base_of<TelegramBotObject, 
             if(array.isEmpty()) return false;
 
             for(auto itr = array.begin(); itr != array.end(); itr++) {
-                JsonHelperT::jsonPathGetArray(*itr, QString::number(itr.i), *target.insert(target.end(), QList<T>()));
+                JsonHelperT::jsonPathGetArray(*itr, "", *target.insert(target.end(), QList<T>()));
             }
             return true;
         }
