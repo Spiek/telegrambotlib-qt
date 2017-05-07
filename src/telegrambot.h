@@ -67,27 +67,31 @@ class TelegramBot : public QObject
             // ForceReply
             ForceReply                   = 1 << 9
         };
-
         TelegramBot(QString apikey, QObject *parent = 0);
         void sendMessage(QVariant chatId, QString text, TelegramFlags flags = TelegramFlags::NoFlag, int replyToMessageId = 0, TelegramKeyboardRequest keyboard = TelegramKeyboardRequest());
         void startMessagePulling(uint timeout = 10, uint limit = 100, TelegramPollMessageTypes messageTypes = TelegramPollMessageTypes::All, long offset = 0);
         void stopMessagePulling(bool instantly = false);
 
     private slots:
+        // pull functions
         void pull();
         void handlePullResponse();
+
+        // parser functions
+        void parseMessage(QByteArray &data);
 
     private:
         // helper
         QNetworkReply* callApi(QString method, QUrlQuery params = QUrlQuery(), bool deleteOnFinish = true);
 
+        // global data
         QNetworkAccessManager aManager;
         QString apiKey;
+        long updateId = 0;
 
-        // message poller
+        // message puller
         QNetworkReply* replyPull = 0;
         QUrlQuery pullParams;
-        long updateId = 0;
 };
 
 /*

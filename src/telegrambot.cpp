@@ -75,6 +75,10 @@ void TelegramBot::sendMessage(QVariant chatId, QString text, TelegramFlags flags
     this->callApi("sendMessage", params);
 }
 
+
+/*
+ * Message Puller
+ */
 void TelegramBot::startMessagePulling(uint timeout, uint limit, TelegramPollMessageTypes messageTypes, long offset)
 {
     // build url params
@@ -122,17 +126,34 @@ void TelegramBot::pull()
 
 void TelegramBot::handlePullResponse()
 {
+    // remove update id from request
+    this->pullParams.removeQueryItem("offset");
+
+    // parse response
+    QByteArray data = this->replyPull->readAll();
+    this->parseMessage(data);
+
+    // add update id to request
+    this->pullParams.addQueryItem("offset", QString::number(++this->updateId));
+
+    // continue pulling
+    this->pull();
+}
+
+
+/*
+ * Reponse Parser
+ */
+void TelegramBot::parseMessage(QByteArray &data)
+{
     // parse result
     QJsonParseError jError;
-    QJsonObject oUpdate = QJsonDocument::fromJson(this->replyPull->readAll(), &jError).object();
+    QJsonObject oUpdate = QJsonDocument::fromJson(data, &jError).object();
 
     // handle parse error
     if(jError.error != QJsonParseError::NoError || !JsonHelper::jsonPathGet(oUpdate, "ok").toBool()) {
-        return (void)qDebug("TelegramBot::handlePullResponse - Parse Error: %s", qPrintable(jError.errorString()));
+        return (void)qDebug("TelegramBot::parseMessage - Parse Error: %s", qPrintable(jError.errorString()));
     }
-
-    // remove update id from request
-    this->pullParams.removeQueryItem("offset");
 
     // loop results
     for(QJsonValue result : oUpdate.value("result").toArray()) {
@@ -181,14 +202,12 @@ void TelegramBot::handlePullResponse()
             }
         }
     }
-
-    // add update id to request
-    this->pullParams.addQueryItem("offset", QString::number(++this->updateId));
-
-    // continue pulling
-    this->pull();
 }
 
+
+/*
+ * Helpers
+ */
 QNetworkReply* TelegramBot::callApi(QString method, QUrlQuery params, bool deleteOnFinish)
 {
     // build url
