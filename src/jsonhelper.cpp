@@ -3,7 +3,7 @@
 QVariant JsonHelper::jsonPathGetImpl(QJsonValue data, QString path, bool showWarnings)
 {
     // json parse
-    QStringList splittedPath = path.split('.');
+    QStringList splittedPath = path.split('.', QString::SkipEmptyParts);
     QStringList processed;
     while(!splittedPath.isEmpty()) {
         QString pathElement = splittedPath.takeFirst();
