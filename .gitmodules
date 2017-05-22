@@ -1,0 +1,3 @@
+[submodule "vendor/qdelegate"]
+	path = vendor/qdelegate
+	url = https://github.com/Spiek/QDelegate.git

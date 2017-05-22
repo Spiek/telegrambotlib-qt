@@ -11,6 +11,7 @@
 
 #include <QNetworkReply>
 #include <QNetworkAccessManager>
+#include <QHttpMultiPart>
 
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -20,6 +21,8 @@
 
 #include "jsonhelper.h"
 #include "telegramdatastructs.h"
+
+#include "httpserver.h"
 
 class TelegramBot : public QObject
 {
@@ -69,8 +72,13 @@ class TelegramBot : public QObject
         };
         TelegramBot(QString apikey, QObject *parent = 0);
         void sendMessage(QVariant chatId, QString text, TelegramFlags flags = TelegramFlags::NoFlag, int replyToMessageId = 0, TelegramKeyboardRequest keyboard = TelegramKeyboardRequest());
+
+        // pull functions
         void startMessagePulling(uint timeout = 10, uint limit = 100, TelegramPollMessageTypes messageTypes = TelegramPollMessageTypes::All, long offset = 0);
         void stopMessagePulling(bool instantly = false);
+
+        // poll functions
+        void setHttpServerWebhook(qint16 port, QString pathCert, QString pathPrivateKey, int maxConnections = 10, TelegramPollMessageTypes messageTypes = TelegramPollMessageTypes::All);
 
     private slots:
         // pull functions
@@ -78,11 +86,14 @@ class TelegramBot : public QObject
         void handlePullResponse();
 
         // parser functions
-        void parseMessage(QByteArray &data);
+        void parseMessage(QByteArray &data, bool singleMessage = false);
+
+        // poll functions
+        void handleServerPollResponse(HttpServerRequest request, HttpServerResponse response);
 
     private:
         // helper
-        QNetworkReply* callApi(QString method, QUrlQuery params = QUrlQuery(), bool deleteOnFinish = true);
+        QNetworkReply* callApi(QString method, QUrlQuery params = QUrlQuery(), bool deleteOnFinish = true, QHttpMultiPart* multiPart = 0);
 
         // global data
         QNetworkAccessManager aManager;
@@ -92,6 +103,9 @@ class TelegramBot : public QObject
         // message puller
         QNetworkReply* replyPull = 0;
         QUrlQuery pullParams;
+
+        // httpserver webhook
+        static QMap<qint16, HttpServer*> webHookWebServers;
 };
 
 /*

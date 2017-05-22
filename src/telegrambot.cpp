@@ -1,5 +1,7 @@
 #include "telegrambot.h"
 
+QMap<qint16, HttpServer*> TelegramBot::webHookWebServers = QMap<qint16, HttpServer*>();
+
 TelegramBot::TelegramBot(QString apikey, QObject *parent) : QObject(parent), apiKey(apikey) { }
 
 void TelegramBot::sendMessage(QVariant chatId, QString text, TelegramFlags flags, int replyToMessageId, TelegramKeyboardRequest keyboard)
@@ -140,23 +142,111 @@ void TelegramBot::handlePullResponse()
     this->pull();
 }
 
+/*
+ *  Message Poller
+ */
+void TelegramBot::setHttpServerWebhook(qint16 port, QString pathCert, QString pathPrivateKey, int maxConnections, TelegramPollMessageTypes messageTypes)
+{
+    // try to acquire httpServer
+    HttpServer* httpServer = 0;
+    QSslCertificate cert;
+    if(this->webHookWebServers.contains(port)) {
+        // if existing webhook contains not the same privateKey, inform user and exit
+        if(this->webHookWebServers.find(port).value()->isSamePrivateKey(pathPrivateKey)) {
+            return (void)qWarning("TelegramBot::setHttpServerWebhook - It's not possible to set multiple private keys for one webserver, webhook installation failed...");
+        }
+        httpServer = this->webHookWebServers.find(port).value();
+
+        // add new cert
+        cert = httpServer->addCert(pathCert);
+        if(cert.isNull()) {
+            return (void)qWarning("TelegramBot::setHttpServerWebhook - Cert file %s is invalid, webhook installation failed...", qPrintable(pathCert));
+        }
+        if(cert.subjectInfo(QSslCertificate::CommonName).isEmpty()) {
+            return (void)qWarning("TelegramBot::setHttpServerWebhook - Cert don't contain a Common Name (CN), webhook installation failed...");
+        }
+    }
+
+    // if no webserver exist, create it
+    else {
+        httpServer = this->webHookWebServers.insert(port, new HttpServer()).value();
+        cert = httpServer->addCert(pathCert);
+        if(cert.isNull()) {
+            delete this->webHookWebServers.take(port);
+            return (void)qWarning("TelegramBot::setHttpServerWebhook - Cert file %s is invalid, webhook installation failed...", qPrintable(pathCert));
+        }
+        if(cert.subjectInfo(QSslCertificate::CommonName).isEmpty()) {
+            delete this->webHookWebServers.take(port);
+            return (void)qWarning("TelegramBot::setHttpServerWebhook - Cert don't contain a Common Name (CN), webhook installation failed...");
+        }
+        if(!httpServer->setPrivateKey(pathPrivateKey)) {
+            delete this->webHookWebServers.take(port);
+            return (void)qWarning("TelegramBot::setHttpServerWebhook - Private Key file %s is invalid, webhook installation failed...", qPrintable(pathPrivateKey));
+        }
+
+        // permit only telegram connections
+        httpServer->addWhiteListHostSubnet("149.154.164.0/22");
+
+        // start listener
+        if(!httpServer->listen(QHostAddress::Any, port)) {
+            delete this->webHookWebServers.take(port);
+            return (void)qWarning("TelegramBot::setHttpServerWebhook - Cannot listen on port %i, webhook installation failed...", port);
+        }
+    }
+
+
+    // simplify data
+    QString host = cert.subjectInfo(QSslCertificate::CommonName).first();
+
+    // add rewrite rule
+    httpServer->addRewriteRule(host, "/" + this->apiKey, {this, &TelegramBot::handleServerPollResponse});
+
+    // build server webhook request
+    QUrlQuery query;
+    query.addQueryItem("url", "https://" + host + ":" + QString::number(port) + "/" + this->apiKey);
+    if(maxConnections) query.addQueryItem("max_connections", QString::number(maxConnections));
+
+    // allowed updates
+    QStringList allowedUpdates;
+    if(static_cast<int>(messageTypes) > 0) {
+        if(messageTypes && TelegramPollMessageTypes::Message) allowedUpdates += "message";
+        if(messageTypes && TelegramPollMessageTypes::EditedMessage) allowedUpdates += "edited_message";
+        if(messageTypes && TelegramPollMessageTypes::ChannelPost) allowedUpdates += "channel_post";
+        if(messageTypes && TelegramPollMessageTypes::EditedChannelPost) allowedUpdates += "edited_channel_post";
+        if(messageTypes && TelegramPollMessageTypes::InlineQuery) allowedUpdates += "inline_query";
+        if(messageTypes && TelegramPollMessageTypes::ChoosenInlineQuery) allowedUpdates += "chosen_inline_result";
+        if(messageTypes && TelegramPollMessageTypes::CallbackQuery) allowedUpdates += "callback_query";
+    }
+    if(!allowedUpdates.isEmpty()) query.addQueryItem("allowed_updates", "[\"" + allowedUpdates.join("\",\"") + "\"]");
+
+    // build multipart
+    QHttpMultiPart *multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
+    QHttpPart textPart;
+    textPart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"certificate\"; filename=\"cert.pem\""));
+    textPart.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/octet-stream"));
+    textPart.setBody(cert.toPem());
+    multiPart->append(textPart);
+
+    // call api
+    this->callApi("setWebhook", query, true, multiPart);
+}
 
 /*
  * Reponse Parser
  */
-void TelegramBot::parseMessage(QByteArray &data)
+void TelegramBot::parseMessage(QByteArray &data, bool singleMessage)
 {
     // parse result
     QJsonParseError jError;
     QJsonObject oUpdate = QJsonDocument::fromJson(data, &jError).object();
 
     // handle parse error
-    if(jError.error != QJsonParseError::NoError || !JsonHelper::jsonPathGet(oUpdate, "ok").toBool()) {
+    if(jError.error != QJsonParseError::NoError || (!singleMessage && !JsonHelper::jsonPathGet(oUpdate, "ok").toBool())) {
         return (void)qDebug("TelegramBot::parseMessage - Parse Error: %s", qPrintable(jError.errorString()));
     }
 
     // loop results
-    for(QJsonValue result : oUpdate.value("result").toArray()) {
+    for(QJsonValue result : singleMessage ? QJsonArray({oUpdate}) : oUpdate.value("result").toArray()) {
         QJsonObject update = result.toObject();
         for(auto itr = update.begin(); itr != update.end(); itr++) {
             // handle update id
@@ -204,21 +294,31 @@ void TelegramBot::parseMessage(QByteArray &data)
     }
 }
 
+void TelegramBot::handleServerPollResponse(HttpServerRequest request, HttpServerResponse response)
+{
+	// parse response
+    this->parseMessage(request->content, true);
+
+	// reply to server with status OK
+    response->status = HttpServerResponsePrivate::OK;
+}
+
 
 /*
  * Helpers
  */
-QNetworkReply* TelegramBot::callApi(QString method, QUrlQuery params, bool deleteOnFinish)
+QNetworkReply* TelegramBot::callApi(QString method, QUrlQuery params, bool deleteOnFinish, QHttpMultiPart *multiPart)
 {
     // build url
     QUrl url(QString("https://api.telegram.org/bot%1/%2").arg(this->apiKey, method));
     url.setQuery(params);
 
     qDebug() << url;
-    qDebug() << params.toString(QUrl::FullyDecoded);
 
     // execute
-    QNetworkReply* reply = this->aManager.get(QNetworkRequest(url));
+    QNetworkRequest request(url);
+    QNetworkReply* reply = multiPart ? this->aManager.post(request, multiPart) : this->aManager.get(request);
+    if(multiPart) multiPart->setParent(reply);
     if(deleteOnFinish) QObject::connect(reply, &QNetworkReply::finished, reply, &QNetworkReply::deleteLater);
     return reply;
 }
