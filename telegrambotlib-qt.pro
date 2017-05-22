@@ -1,4 +1,4 @@
-QT += core network
+QT += core network websockets
 QT -= gui
 
 CONFIG += c++14
@@ -11,7 +11,9 @@ TEMPLATE = app
 
 SOURCES += src/main.cpp \
     src/telegrambot.cpp \
-    src/jsonhelper.cpp
+    src/jsonhelper.cpp \
+    modules/sslserver/sslserver.cpp \
+    modules/httpserver/httpserver.cpp
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked deprecated (the exact warnings
@@ -27,5 +29,12 @@ DEFINES += QT_DEPRECATED_WARNINGS
 HEADERS += src/telegrambot.h \
     src/jsonhelper.h \
     src/telegramdatastructs.h \
-    src/telegramdatainterface.h
-    
+    src/telegramdatainterface.h \
+    modules/sslserver/sslserver.h \
+    modules/httpserver/httpserver.h
+
+INCLUDEPATH += modules/sslserver/
+INCLUDEPATH += modules/httpserver/
+
+include(vendor/qdelegate/QDelegate.pri)
+
