@@ -145,7 +145,7 @@ void TelegramBot::handlePullResponse()
 /*
  *  Message Poller
  */
-void TelegramBot::setHttpServerWebhook(qint16 port, QString pathCert, QString pathPrivateKey, int maxConnections, TelegramPollMessageTypes messageTypes)
+bool TelegramBot::setHttpServerWebhook(qint16 port, QString pathCert, QString pathPrivateKey, int maxConnections, TelegramPollMessageTypes messageTypes)
 {
     // try to acquire httpServer
     HttpServer* httpServer = 0;
@@ -153,35 +153,36 @@ void TelegramBot::setHttpServerWebhook(qint16 port, QString pathCert, QString pa
     if(this->webHookWebServers.contains(port)) {
         // if existing webhook contains not the same privateKey, inform user and exit
         if(this->webHookWebServers.find(port).value()->isSamePrivateKey(pathPrivateKey)) {
-            return (void)qWarning("TelegramBot::setHttpServerWebhook - It's not possible to set multiple private keys for one webserver, webhook installation failed...");
+            EXIT_FAILED("TelegramBot::setHttpServerWebhook - It's not possible to set multiple private keys for one webserver, webhook installation failed...")
         }
         httpServer = this->webHookWebServers.find(port).value();
 
         // add new cert
         cert = httpServer->addCert(pathCert);
         if(cert.isNull()) {
-            return (void)qWarning("TelegramBot::setHttpServerWebhook - Cert file %s is invalid, webhook installation failed...", qPrintable(pathCert));
+            EXIT_FAILED("TelegramBot::setHttpServerWebhook - Cert file %s is invalid, webhook installation failed...", qPrintable(pathCert))
         }
         if(cert.subjectInfo(QSslCertificate::CommonName).isEmpty()) {
-            return (void)qWarning("TelegramBot::setHttpServerWebhook - Cert don't contain a Common Name (CN), webhook installation failed...");
+            EXIT_FAILED("TelegramBot::setHttpServerWebhook - Cert don't contain a Common Name (CN), webhook installation failed...");
         }
     }
 
     // if no webserver exist, create it
     else {
-        httpServer = this->webHookWebServers.insert(port, new HttpServer()).value();
+        // create new http server and register it for auto scope deletion if an error occours
+        httpServer = new HttpServer;
+        QScopedPointer<HttpServer> scopedHttpServer(httpServer);
+
+        // handle certificates
         cert = httpServer->addCert(pathCert);
         if(cert.isNull()) {
-            delete this->webHookWebServers.take(port);
-            return (void)qWarning("TelegramBot::setHttpServerWebhook - Cert file %s is invalid, webhook installation failed...", qPrintable(pathCert));
+            EXIT_FAILED("TelegramBot::setHttpServerWebhook - Cert file %s is invalid, webhook installation failed...", qPrintable(pathCert))
         }
         if(cert.subjectInfo(QSslCertificate::CommonName).isEmpty()) {
-            delete this->webHookWebServers.take(port);
-            return (void)qWarning("TelegramBot::setHttpServerWebhook - Cert don't contain a Common Name (CN), webhook installation failed...");
+            EXIT_FAILED("TelegramBot::setHttpServerWebhook - Cert don't contain a Common Name (CN), webhook installation failed...")
         }
         if(!httpServer->setPrivateKey(pathPrivateKey)) {
-            delete this->webHookWebServers.take(port);
-            return (void)qWarning("TelegramBot::setHttpServerWebhook - Private Key file %s is invalid, webhook installation failed...", qPrintable(pathPrivateKey));
+            EXIT_FAILED("TelegramBot::setHttpServerWebhook - Private Key file %s is invalid, webhook installation failed...", qPrintable(pathPrivateKey))
         }
 
         // permit only telegram connections
@@ -189,11 +190,12 @@ void TelegramBot::setHttpServerWebhook(qint16 port, QString pathCert, QString pa
 
         // start listener
         if(!httpServer->listen(QHostAddress::Any, port)) {
-            delete this->webHookWebServers.take(port);
-            return (void)qWarning("TelegramBot::setHttpServerWebhook - Cannot listen on port %i, webhook installation failed...", port);
+            EXIT_FAILED("TelegramBot::setHttpServerWebhook - Cannot listen on port %i, webhook installation failed...", port)
         }
-    }
 
+        // everything is okay, so register http server
+        this->webHookWebServers.insert(port, scopedHttpServer.take());
+    }
 
     // simplify data
     QString host = cert.subjectInfo(QSslCertificate::CommonName).first();
@@ -228,7 +230,7 @@ void TelegramBot::setHttpServerWebhook(qint16 port, QString pathCert, QString pa
     multiPart->append(textPart);
 
     // call api
-    this->callApi("setWebhook", query, true, multiPart);
+    return this->callApiJson("setWebhook", query, multiPart).value("result").toBool();
 }
 
 void TelegramBot::deleteWebhook()

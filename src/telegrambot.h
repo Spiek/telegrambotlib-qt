@@ -25,6 +25,9 @@
 
 #include "httpserver.h"
 
+// Helper Macros
+#define EXIT_FAILED(...) qWarning(__VA_ARGS__); return false;
+
 class TelegramBot : public QObject
 {
     Q_OBJECT
@@ -79,7 +82,7 @@ class TelegramBot : public QObject
         void stopMessagePulling(bool instantly = false);
 
         // webhook functions
-        void setHttpServerWebhook(qint16 port, QString pathCert, QString pathPrivateKey, int maxConnections = 10, TelegramPollMessageTypes messageTypes = TelegramPollMessageTypes::All);
+        bool setHttpServerWebhook(qint16 port, QString pathCert, QString pathPrivateKey, int maxConnections = 10, TelegramPollMessageTypes messageTypes = TelegramPollMessageTypes::All);
         void deleteWebhook();
         TelegramBotOperationResult deleteWebhookResult();
         TelegramBotWebHookInfo getWebhookInfo();
