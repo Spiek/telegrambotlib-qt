@@ -6,6 +6,7 @@
 
 #include <QObject>
 #include <QVariant>
+#include <QEventLoop>
 
 #include <QUrlQuery>
 
@@ -79,6 +80,7 @@ class TelegramBot : public QObject
 
         // poll functions
         void setHttpServerWebhook(qint16 port, QString pathCert, QString pathPrivateKey, int maxConnections = 10, TelegramPollMessageTypes messageTypes = TelegramPollMessageTypes::All);
+        bool deleteWebhook();
 
     private slots:
         // pull functions
@@ -94,6 +96,7 @@ class TelegramBot : public QObject
     private:
         // helper
         QNetworkReply* callApi(QString method, QUrlQuery params = QUrlQuery(), bool deleteOnFinish = true, QHttpMultiPart* multiPart = 0);
+        QJsonObject callApiJson(QString method, QUrlQuery params = QUrlQuery(), QHttpMultiPart* multiPart = 0);
 
         // global data
         QNetworkAccessManager aManager;

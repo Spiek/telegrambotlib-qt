@@ -231,6 +231,11 @@ void TelegramBot::setHttpServerWebhook(qint16 port, QString pathCert, QString pa
     this->callApi("setWebhook", query, true, multiPart);
 }
 
+bool TelegramBot::deleteWebhook()
+{
+    return this->callApiJson("deleteWebhook").value("result").toBool();
+}
+
 /*
  * Reponse Parser
  */
@@ -321,4 +326,18 @@ QNetworkReply* TelegramBot::callApi(QString method, QUrlQuery params, bool delet
     if(multiPart) multiPart->setParent(reply);
     if(deleteOnFinish) QObject::connect(reply, &QNetworkReply::finished, reply, &QNetworkReply::deleteLater);
     return reply;
+}
+
+QJsonObject TelegramBot::callApiJson(QString method, QUrlQuery params, QHttpMultiPart *multiPart)
+{
+    // exec request
+    QNetworkReply* reply = this->callApi(method, params, true, multiPart);
+
+    // wait async for answer
+    QEventLoop loop;
+    QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+    loop.exec();
+
+    // parse answer
+    return QJsonDocument::fromJson(reply->readAll()).object();
 }
