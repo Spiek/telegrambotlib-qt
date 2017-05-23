@@ -56,15 +56,19 @@ struct TelegramBotWebHookInfo : public TelegramBotObject {
     qint32 lastErrorDate;
     QString lastErrorMessage;
     qint32 maxConnections;
+    QList<QString> allowedUpdates;
+
+    TelegramBotWebHookInfo(QJsonObject object) { this->fromJson(object); }
 
     // parse logic
     virtual void fromJson(QJsonObject& object) {
         JsonHelperT<QString>::jsonPathGet(object, "url", this->url);
         JsonHelperT<bool>::jsonPathGet(object, "has_custom_certificate", this->hasCustomCertificate);
         JsonHelperT<bool>::jsonPathGet(object, "pending_update_count", this->pendingUpdateCount);
-        JsonHelperT<qint32>::jsonPathGet(object, "last_error_date", this->lastErrorDate);
-        JsonHelperT<QString>::jsonPathGet(object, "last_error_message", this->lastErrorMessage);
-        JsonHelperT<qint32>::jsonPathGet(object, "max_connections", this->maxConnections);
+        JsonHelperT<qint32>::jsonPathGet(object, "last_error_date", this->lastErrorDate, false);
+        JsonHelperT<QString>::jsonPathGet(object, "last_error_message", this->lastErrorMessage, false);
+        JsonHelperT<qint32>::jsonPathGet(object, "max_connections", this->maxConnections, false);
+        JsonHelperT<QString>::jsonPathGetArray(object, "allowed_updates", this->allowedUpdates, false);
     }
 };
 

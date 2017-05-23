@@ -241,6 +241,11 @@ TelegramBotOperationResult TelegramBot::deleteWebhookResult()
     return TelegramBotOperationResult(this->callApiJson("deleteWebhook"));
 }
 
+TelegramBotWebHookInfo TelegramBot::getWebhookInfo()
+{
+    return TelegramBotWebHookInfo(this->callApiJson("getWebhookInfo").value("result").toObject());
+}
+
 /*
  * Reponse Parser
  */
