@@ -199,7 +199,7 @@ void TelegramBot::setHttpServerWebhook(qint16 port, QString pathCert, QString pa
     QString host = cert.subjectInfo(QSslCertificate::CommonName).first();
 
     // add rewrite rule
-    httpServer->addRewriteRule(host, "/" + this->apiKey, {this, &TelegramBot::handleServerPollResponse});
+    httpServer->addRewriteRule(host, "/" + this->apiKey, {this, &TelegramBot::handleServerWebhookResponse});
 
     // build server webhook request
     QUrlQuery query;
@@ -304,7 +304,7 @@ void TelegramBot::parseMessage(QByteArray &data, bool singleMessage)
     }
 }
 
-void TelegramBot::handleServerPollResponse(HttpServerRequest request, HttpServerResponse response)
+void TelegramBot::handleServerWebhookResponse(HttpServerRequest request, HttpServerResponse response)
 {
 	// parse response
     this->parseMessage(request->content, true);

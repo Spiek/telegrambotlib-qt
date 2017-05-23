@@ -78,7 +78,7 @@ class TelegramBot : public QObject
         void startMessagePulling(uint timeout = 10, uint limit = 100, TelegramPollMessageTypes messageTypes = TelegramPollMessageTypes::All, long offset = 0);
         void stopMessagePulling(bool instantly = false);
 
-        // poll functions
+        // webhook functions
         void setHttpServerWebhook(qint16 port, QString pathCert, QString pathPrivateKey, int maxConnections = 10, TelegramPollMessageTypes messageTypes = TelegramPollMessageTypes::All);
         void deleteWebhook();
         TelegramBotOperationResult deleteWebhookResult();
@@ -91,8 +91,8 @@ class TelegramBot : public QObject
         // parser functions
         void parseMessage(QByteArray &data, bool singleMessage = false);
 
-        // poll functions
-        void handleServerPollResponse(HttpServerRequest request, HttpServerResponse response);
+        // webhook functions
+        void handleServerWebhookResponse(HttpServerRequest request, HttpServerResponse response);
 
     private:
         // helper
