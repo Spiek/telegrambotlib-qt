@@ -231,9 +231,14 @@ void TelegramBot::setHttpServerWebhook(qint16 port, QString pathCert, QString pa
     this->callApi("setWebhook", query, true, multiPart);
 }
 
-bool TelegramBot::deleteWebhook()
+void TelegramBot::deleteWebhook()
 {
-    return this->callApiJson("deleteWebhook").value("result").toBool();
+    this->callApi("deleteWebhook");
+}
+
+TelegramBotOperationResult TelegramBot::deleteWebhookResult()
+{
+    return TelegramBotOperationResult(this->callApiJson("deleteWebhook"));
 }
 
 /*

@@ -80,7 +80,8 @@ class TelegramBot : public QObject
 
         // poll functions
         void setHttpServerWebhook(qint16 port, QString pathCert, QString pathPrivateKey, int maxConnections = 10, TelegramPollMessageTypes messageTypes = TelegramPollMessageTypes::All);
-        bool deleteWebhook();
+        void deleteWebhook();
+        TelegramBotOperationResult deleteWebhookResult();
 
     private slots:
         // pull functions

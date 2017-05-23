@@ -28,6 +28,45 @@ struct TelegramBotKeyboardButtonRequest
 typedef QList<QList<TelegramBotKeyboardButtonRequest>> TelegramKeyboardRequest;
 
 
+/*
+ *  Telegram System Data Structs
+ */
+
+// TelegramBotOperationResult - This object represents a Telegram Operation result
+struct TelegramBotOperationResult : public TelegramBotObject {
+    bool result;
+    qint32 errorCode = 0;
+    QString description;
+
+    TelegramBotOperationResult(QJsonObject object) { this->fromJson(object); }
+
+    // parse logic
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<bool>::jsonPathGet(object, "result", this->result);
+        JsonHelperT<qint32>::jsonPathGet(object, "error_code", this->errorCode, false);
+        JsonHelperT<QString>::jsonPathGet(object, "description", this->description);
+    }
+};
+
+// TelegramBotWebHookInfo - This object represents Telegram Webhook Information
+struct TelegramBotWebHookInfo : public TelegramBotObject {
+    QString url;
+    bool hasCustomCertificate;
+    bool pendingUpdateCount;
+    qint32 lastErrorDate;
+    QString lastErrorMessage;
+    qint32 maxConnections;
+
+    // parse logic
+    virtual void fromJson(QJsonObject& object) {
+        JsonHelperT<QString>::jsonPathGet(object, "url", this->url);
+        JsonHelperT<bool>::jsonPathGet(object, "has_custom_certificate", this->hasCustomCertificate);
+        JsonHelperT<bool>::jsonPathGet(object, "pending_update_count", this->pendingUpdateCount);
+        JsonHelperT<qint32>::jsonPathGet(object, "last_error_date", this->lastErrorDate);
+        JsonHelperT<QString>::jsonPathGet(object, "last_error_message", this->lastErrorMessage);
+        JsonHelperT<qint32>::jsonPathGet(object, "max_connections", this->maxConnections);
+    }
+};
 
 /*
  *  Telegram Game Data Structs
