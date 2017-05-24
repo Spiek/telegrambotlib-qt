@@ -83,6 +83,9 @@ void TelegramBot::sendMessage(QVariant chatId, QString text, TelegramFlags flags
  */
 void TelegramBot::startMessagePulling(uint timeout, uint limit, TelegramPollMessageTypes messageTypes, long offset)
 {
+    // remove webhook
+    this->deleteWebhookResult();
+
     // build url params
     this->pullParams.clear();
     if(offset) this->pullParams.addQueryItem("offset", QString::number(offset));
