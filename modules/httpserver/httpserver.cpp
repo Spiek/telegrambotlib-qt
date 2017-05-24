@@ -34,17 +34,11 @@ void HttpServer::handleNewData()
     // exit if we have no route for host
     if(!this->rewriteRules.contains(request->host)) return;
 
-    // try to find matching routes
-    QList<QDelegate<void(HttpServerRequest,HttpServerResponse)>*> routes;
-    QMultiMap<QString, QDelegate<void(HttpServerRequest,HttpServerResponse)>>& hostRoutes = this->rewriteRules.find(request->host).value();
-    for(auto itr = hostRoutes.begin(); itr != hostRoutes.end(); itr++) {
-        if(itr.key().startsWith(request->url)) routes.append(&itr.value());
-    }
-
-    // call routes
+    // invoke routes
     HttpServerResponse response(new HttpServerResponsePrivate);
-    while(!routes.isEmpty()) {
-        routes.takeFirst()->invoke(request, response);
+    auto& hostRoutes = this->rewriteRules.find(request->host).value();
+    for(auto itr = hostRoutes.begin(); itr != hostRoutes.end(); itr++) {
+        if(itr.key().startsWith(request->url)) itr.value().invoke(request, response);
     }
 
     // exit if user don't want to send a response back
