@@ -2,7 +2,9 @@
 
 A very easy to use Qt library for Accessing the Telegram Bot Api.
 
-## Receiving Updates
+----------
+
+### Receiving Updates
 The Telegrambot library gives you multiple possibilities to receive messages which was sent to your bot 
 
 <details><summary>Message Pulling</summary>
@@ -84,7 +86,10 @@ int main(int argc, char** argv)
 </details>
 
 
-## Communication
+----------
+
+
+### Communication
 
 The Tegrambot library gives you also the possibility to communicate with chats
 
