@@ -215,7 +215,7 @@ bool TelegramBot::setHttpServerWebhook(qint16 port, QString pathCert, QString pa
 
     // build multipart
     QByteArray certContent = cert.toPem();
-    QHttpMultiPart *multiPart = this->generateFile("certificate", "cert.pem", certContent);
+    QHttpMultiPart *multiPart = this->createUploadFile("certificate", "cert.pem", certContent);
 
     // call api
     return this->callApiJson("setWebhook", query, multiPart).value("result").toBool();
@@ -342,7 +342,7 @@ QJsonObject TelegramBot::callApiJson(QString method, QUrlQuery params, QHttpMult
     return QJsonDocument::fromJson(reply->readAll()).object();
 }
 
-QHttpMultiPart* TelegramBot::generateFile(QString name, QString fileName, QByteArray &content, bool detectMimeType, QHttpMultiPart *multiPart)
+QHttpMultiPart* TelegramBot::createUploadFile(QString name, QString fileName, QByteArray &content, bool detectMimeType, QHttpMultiPart *multiPart)
 {
     // construct instance if not provided
     if(!multiPart) multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
@@ -418,7 +418,7 @@ QHttpMultiPart* TelegramBot::handleFile(QString fieldName, QVariant file, QUrlQu
     // handle content
     if(file.type() == QVariant::ByteArray) {
         QByteArray content = file.value<QByteArray>();
-        multiPart = this->generateFile(fieldName, fieldName, content, true, multiPart);
+        multiPart = this->createUploadFile(fieldName, fieldName, content, true, multiPart);
     }
 
     // handle url
@@ -432,7 +432,7 @@ QHttpMultiPart* TelegramBot::handleFile(QString fieldName, QVariant file, QUrlQu
             QByteArray content = fFile.readAll();
             if(content.isEmpty()) return multiPart;
             QFileInfo fInfo(fFile);
-            multiPart = this->generateFile(fieldName, fInfo.fileName(), content, true, multiPart);
+            multiPart = this->createUploadFile(fieldName, fInfo.fileName(), content, true, multiPart);
         }
 
         // we have a link given, so just set it
