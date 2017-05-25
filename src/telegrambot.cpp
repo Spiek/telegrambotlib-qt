@@ -15,7 +15,7 @@ TelegramBotUser TelegramBot::getMe()
 /*
  * Message Functions
  */
-void TelegramBot::sendMessage(QVariant chatId, QString text, TelegramFlags flags, int replyToMessageId, TelegramKeyboardRequest keyboard)
+void TelegramBot::sendMessage(QVariant chatId, QString text, int replyToMessageId, TelegramFlags flags, TelegramKeyboardRequest keyboard)
 {
     QUrlQuery params;
     params.addQueryItem("chat_id", chatId.toString());
@@ -35,12 +35,12 @@ void TelegramBot::sendMessage(QVariant chatId, QString text, TelegramFlags flags
     this->callApi("sendMessage", params);
 }
 
-void TelegramBot::forwardMessage(QVariant chatId, QVariant fromChatId, qint32 messageId, TelegramFlags flags)
+void TelegramBot::forwardMessage(QVariant targetChatId, QVariant fromChatId, qint32 fromMessageId, TelegramFlags flags)
 {
     QUrlQuery params;
-    params.addQueryItem("chat_id", chatId.toString());
+    params.addQueryItem("chat_id", targetChatId.toString());
     params.addQueryItem("from_chat_id", fromChatId.toString());
-    params.addQueryItem("message_id", QString::number(messageId));
+    params.addQueryItem("message_id", QString::number(fromMessageId));
     if(flags && TelegramFlags::DisableNotfication) params.addQueryItem("disable_notification", "true");
 
     this->callApi("forwardMessage", params);
@@ -49,7 +49,7 @@ void TelegramBot::forwardMessage(QVariant chatId, QVariant fromChatId, qint32 me
 /*
  * Content Functions
  */
-void TelegramBot::sendPhoto(QVariant chatId, QVariant photo, QString caption, TelegramFlags flags, int replyToMessageId, TelegramKeyboardRequest keyboard)
+void TelegramBot::sendPhoto(QVariant chatId, QVariant photo, QString caption, int replyToMessageId, TelegramFlags flags, TelegramKeyboardRequest keyboard)
 {
     QUrlQuery params;
     params.addQueryItem("chat_id", chatId.toString());
