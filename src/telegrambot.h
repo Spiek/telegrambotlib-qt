@@ -7,6 +7,8 @@
 #include <QObject>
 #include <QVariant>
 #include <QEventLoop>
+#include <QFile>
+#include <QFileInfo>
 #include <QMimeDatabase>
 
 #include <QUrlQuery>
@@ -84,6 +86,9 @@ class TelegramBot : public QObject
         void sendMessage(QVariant chatId, QString text, TelegramFlags flags = TelegramFlags::NoFlag, int replyToMessageId = 0, TelegramKeyboardRequest keyboard = TelegramKeyboardRequest());
         void forwardMessage(QVariant chatId, QVariant fromChatId, qint32 messageId, TelegramFlags flags = TelegramFlags::NoFlag);
 
+        // Content Functions
+        void sendPhoto(QVariant chatId, QVariant photo, QString caption = QString(), TelegramFlags flags = TelegramFlags::NoFlag, int replyToMessageId = 0, TelegramKeyboardRequest keyboard = TelegramKeyboardRequest());
+
         // Message Puller
         void startMessagePulling(uint timeout = 10, uint limit = 100, TelegramPollMessageTypes messageTypes = TelegramPollMessageTypes::All, long offset = 0);
         void stopMessagePulling(bool instantly = false);
@@ -111,6 +116,7 @@ class TelegramBot : public QObject
         QJsonObject callApiJson(QString method, QUrlQuery params = QUrlQuery(), QHttpMultiPart* multiPart = 0);
         QHttpMultiPart* generateFile(QString name, QString fileName, QByteArray& content, bool detectMimeType = false, QHttpMultiPart* multiPart = 0);
         void hanldeReplyMarkup(QUrlQuery& params, TelegramFlags flags, TelegramKeyboardRequest& keyboard);
+        QHttpMultiPart* handleFile(QString fieldName, QVariant file, QUrlQuery& params, QHttpMultiPart* multiPart = 0);
 
         // global data
         QNetworkAccessManager aManager;

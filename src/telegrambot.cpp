@@ -47,6 +47,27 @@ void TelegramBot::forwardMessage(QVariant chatId, QVariant fromChatId, qint32 me
 }
 
 /*
+ * Content Functions
+ */
+void TelegramBot::sendPhoto(QVariant chatId, QVariant photo, QString caption, TelegramFlags flags, int replyToMessageId, TelegramKeyboardRequest keyboard)
+{
+    QUrlQuery params;
+    params.addQueryItem("chat_id", chatId.toString());
+    if(!caption.isNull()) params.addQueryItem("caption", caption);
+    if(flags && TelegramFlags::DisableNotfication) params.addQueryItem("disable_notification", "true");
+    if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
+
+    // handle reply markup
+    this->hanldeReplyMarkup(params, flags, keyboard);
+
+    // handle file
+    QHttpMultiPart* multiPart = this->handleFile("photo", photo, params);
+
+    // call api
+    this->callApi("sendPhoto", params, true, multiPart);
+}
+
+/*
  * Message Puller
  */
 void TelegramBot::startMessagePulling(uint timeout, uint limit, TelegramPollMessageTypes messageTypes, long offset)
@@ -392,3 +413,38 @@ void TelegramBot::hanldeReplyMarkup(QUrlQuery& params, TelegramFlags flags, Tele
     if(!replyMarkup.isEmpty()) params.addQueryItem("reply_markup", replyMarkup);
 }
 
+QHttpMultiPart* TelegramBot::handleFile(QString fieldName, QVariant file, QUrlQuery &params, QHttpMultiPart* multiPart)
+{
+    // handle content
+    if(file.type() == QVariant::ByteArray) {
+        QByteArray content = file.value<QByteArray>();
+        multiPart = this->generateFile(fieldName, fieldName, content, true, multiPart);
+    }
+
+    // handle url
+    else if(file.type() == QVariant::String) {
+        QUrl url = QUrl::fromUserInput(file.toString());
+
+        // upload the local file to telegram
+        if(url.isLocalFile()) {
+            QFile fFile(url.toString());
+            if(!fFile.open(QFile::ReadOnly)) return multiPart;
+            QByteArray content = fFile.readAll();
+            if(content.isEmpty()) return multiPart;
+            QFileInfo fInfo(fFile);
+            multiPart = this->generateFile(fieldName, fInfo.fileName(), content, true, multiPart);
+        }
+
+        // we have a link given, so just set it
+        else {
+            params.addQueryItem(fieldName, file.toString());
+        }
+    }
+
+    // if we have an int as content given, we interpret it as telegram file id
+    else if(file.canConvert<qint32>()) {
+        params.addQueryItem(fieldName, file.toString());
+    }
+
+    return multiPart;
+}
