@@ -95,6 +95,7 @@ class TelegramBot : public QObject
         void sendVoice(QVariant chatId, QVariant voice, QString caption = QString(), int duration = -1, int replyToMessageId = 0, TelegramFlags flags = TelegramFlags::NoFlag, TelegramKeyboardRequest keyboard = TelegramKeyboardRequest());
         void sendVideoNote(QVariant chatId, QVariant videoNote, int length, int duration = -1, int replyToMessageId = 0, TelegramFlags flags = TelegramFlags::NoFlag, TelegramKeyboardRequest keyboard = TelegramKeyboardRequest());
         void sendLocation(QVariant chatId, double latitude, double longitude, int replyToMessageId = 0, TelegramFlags flags = TelegramFlags::NoFlag, TelegramKeyboardRequest keyboard = TelegramKeyboardRequest());
+        void sendVenue(QVariant chatId, double latitude, double longitude, QString title, QString address, QString foursquareId = QString(), int replyToMessageId = 0, TelegramFlags flags = TelegramFlags::NoFlag, TelegramKeyboardRequest keyboard = TelegramKeyboardRequest());
 
         // Message Puller
         void startMessagePulling(uint timeout = 10, uint limit = 100, TelegramPollMessageTypes messageTypes = TelegramPollMessageTypes::All, long offset = 0);

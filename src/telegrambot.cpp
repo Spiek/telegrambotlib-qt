@@ -196,6 +196,25 @@ void TelegramBot::sendLocation(QVariant chatId, double latitude, double longitud
     this->callApi("sendLocation", params);
 }
 
+void TelegramBot::sendVenue(QVariant chatId, double latitude, double longitude, QString title, QString address, QString foursquareId, int replyToMessageId, TelegramFlags flags, TelegramKeyboardRequest keyboard)
+{
+    QUrlQuery params;
+    params.addQueryItem("chat_id", chatId.toString());
+    params.addQueryItem("latitude", QString::number(latitude));
+    params.addQueryItem("longitude", QString::number(longitude));
+    params.addQueryItem("title", title);
+    params.addQueryItem("address", address);
+    if(!foursquareId.isNull()) params.addQueryItem("foursquare_id", foursquareId);
+    if(flags && TelegramFlags::DisableNotfication) params.addQueryItem("disable_notification", "true");
+    if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
+
+    // handle reply markup
+    this->hanldeReplyMarkup(params, flags, keyboard);
+
+    // call api
+    this->callApi("sendVenue", params);
+}
+
 /*
  * Message Puller
  */
