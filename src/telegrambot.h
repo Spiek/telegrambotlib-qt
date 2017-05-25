@@ -7,6 +7,7 @@
 #include <QObject>
 #include <QVariant>
 #include <QEventLoop>
+#include <QMimeDatabase>
 
 #include <QUrlQuery>
 
@@ -108,6 +109,8 @@ class TelegramBot : public QObject
         // helper
         QNetworkReply* callApi(QString method, QUrlQuery params = QUrlQuery(), bool deleteOnFinish = true, QHttpMultiPart* multiPart = 0);
         QJsonObject callApiJson(QString method, QUrlQuery params = QUrlQuery(), QHttpMultiPart* multiPart = 0);
+        QHttpMultiPart* generateFile(QString name, QString fileName, QByteArray& content, bool detectMimeType = false, QHttpMultiPart* multiPart = 0);
+        void hanldeReplyMarkup(QUrlQuery& params, TelegramFlags flags, TelegramKeyboardRequest& keyboard);
 
         // global data
         QNetworkAccessManager aManager;

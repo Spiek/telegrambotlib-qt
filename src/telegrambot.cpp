@@ -24,65 +24,12 @@ void TelegramBot::sendMessage(QVariant chatId, QString text, TelegramFlags flags
     // handle flags
     if(flags && TelegramFlags::Markdown) params.addQueryItem("parse_mode", "Markdown");
     else if(flags && TelegramFlags::Html) params.addQueryItem("parse_mode", "HTML");
-
     if(flags && TelegramFlags::DisableWebPagePreview) params.addQueryItem("disable_web_page_preview", "true");
-
     if(flags && TelegramFlags::DisableNotfication) params.addQueryItem("disable_notification", "true");
-
     if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
 
-    // handle types
-    QString replyMarkup;
-    if(flags && TelegramFlags::ForceReply) {
-        replyMarkup = "{\"force_reply\":true";
-        if(flags && TelegramFlags::Selective) replyMarkup += ",\"selective\":true";
-        replyMarkup += "}";
-    }
-
-    else if(flags && TelegramFlags::ReplyKeyboardRemove) {
-        replyMarkup = "{\"remove_keyboard\":true";
-        if(flags && TelegramFlags::Selective) replyMarkup += ",\"selective\":true";
-        replyMarkup += "}";
-    }
-
-    // build keyboard
-    else if(!keyboard.isEmpty()) {
-        QString keyboardContent = "[";
-        bool firstRow = true;
-        for(QList<TelegramBotKeyboardButtonRequest>& row : keyboard) {
-            if(!firstRow) keyboardContent += ",";
-            keyboardContent += "[";
-            bool firstColumn = true;
-            for(TelegramBotKeyboardButtonRequest& column : row) {
-                keyboardContent += QString("%1{\"text\":\"%2\"").arg(firstColumn ? "" : ",", column.text);
-                if(flags && TelegramFlags::ReplyKeyboardMarkup) {
-                    if(!column.requestContact) keyboardContent += QString(",\"request_contact\":%1").arg(column.requestContact ? "true" : "false");
-                    if(!column.requestLocation) keyboardContent += QString(",\"request_location\":%1").arg(column.requestLocation ? "true" : "false");
-                } else {
-                    if(!column.url.isEmpty()) keyboardContent += QString(",\"url\":\"%1\"").arg(column.url);
-                    if(!column.callbackData.isEmpty()) keyboardContent += QString(",\"callback_data\":\"%1\"").arg(column.callbackData);
-                    if(!column.switchInlineQuery.isEmpty()) keyboardContent += QString(",\"switch_inline_query\":\"%1\"").arg(column.switchInlineQuery);
-                    if(!column.switchInlineQueryCurrentChat.isEmpty()) keyboardContent += QString(",\"switch_inline_query_current_chat\":\"%1\"").arg(column.switchInlineQueryCurrentChat);
-                }
-                keyboardContent += "}";
-                firstColumn = false;
-            }
-            keyboardContent += "]";
-            firstRow = false;
-        }
-        keyboardContent += "]";
-
-        if(flags && TelegramFlags::ReplyKeyboardMarkup) {
-            replyMarkup += "{\"keyboard\":" + keyboardContent;
-            if(flags && TelegramFlags::ResizeKeyboard) replyMarkup += ",\"resize_keyboard\":true";
-            if(flags && TelegramFlags::OneTimeKeyboard) replyMarkup += ",\"one_time_keyboard\":true";
-            if(flags && TelegramFlags::Selective) replyMarkup += ",\"selective\":true";
-        } else {
-            replyMarkup += "{\"inline_keyboard\":" + keyboardContent;
-        }
-        replyMarkup += "}";
-    }
-    if(!replyMarkup.isEmpty()) params.addQueryItem("reply_markup", replyMarkup);
+    // handle reply markup
+    this->hanldeReplyMarkup(params, flags, keyboard);
 
     // call api
     this->callApi("sendMessage", params);
@@ -246,12 +193,8 @@ bool TelegramBot::setHttpServerWebhook(qint16 port, QString pathCert, QString pa
     if(!allowedUpdates.isEmpty()) query.addQueryItem("allowed_updates", "[\"" + allowedUpdates.join("\",\"") + "\"]");
 
     // build multipart
-    QHttpMultiPart *multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
-    QHttpPart textPart;
-    textPart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"certificate\"; filename=\"cert.pem\""));
-    textPart.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/octet-stream"));
-    textPart.setBody(cert.toPem());
-    multiPart->append(textPart);
+    QByteArray certContent = cert.toPem();
+    QHttpMultiPart *multiPart = this->generateFile("certificate", "cert.pem", certContent);
 
     // call api
     return this->callApiJson("setWebhook", query, multiPart).value("result").toBool();
@@ -377,3 +320,75 @@ QJsonObject TelegramBot::callApiJson(QString method, QUrlQuery params, QHttpMult
     // parse answer
     return QJsonDocument::fromJson(reply->readAll()).object();
 }
+
+QHttpMultiPart* TelegramBot::generateFile(QString name, QString fileName, QByteArray &content, bool detectMimeType, QHttpMultiPart *multiPart)
+{
+    // construct instance if not provided
+    if(!multiPart) multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
+
+    // append multipart multipart
+    QHttpPart contentPart;
+    contentPart.setHeader(QNetworkRequest::ContentDispositionHeader, QString("form-data; name=\"%1\"; filename=\"%2\"").arg(name, fileName));
+    contentPart.setHeader(QNetworkRequest::ContentTypeHeader, detectMimeType ? QMimeDatabase().mimeTypeForData(content).name() : QString("application/octet-stream"));
+    contentPart.setBody(content);
+    multiPart->append(contentPart);
+
+    return multiPart;
+}
+
+void TelegramBot::hanldeReplyMarkup(QUrlQuery& params, TelegramFlags flags, TelegramKeyboardRequest &keyboard)
+{
+    // handle types
+    QString replyMarkup;
+    if(flags && TelegramFlags::ForceReply) {
+        replyMarkup = "{\"force_reply\":true";
+        if(flags && TelegramFlags::Selective) replyMarkup += ",\"selective\":true";
+        replyMarkup += "}";
+    }
+
+    else if(flags && TelegramFlags::ReplyKeyboardRemove) {
+        replyMarkup = "{\"remove_keyboard\":true";
+        if(flags && TelegramFlags::Selective) replyMarkup += ",\"selective\":true";
+        replyMarkup += "}";
+    }
+
+    // build keyboard
+    else if(!keyboard.isEmpty()) {
+        QString keyboardContent = "[";
+        bool firstRow = true;
+        for(QList<TelegramBotKeyboardButtonRequest>& row : keyboard) {
+            if(!firstRow) keyboardContent += ",";
+            keyboardContent += "[";
+            bool firstColumn = true;
+            for(TelegramBotKeyboardButtonRequest& column : row) {
+                keyboardContent += QString("%1{\"text\":\"%2\"").arg(firstColumn ? "" : ",", column.text);
+                if(flags && TelegramFlags::ReplyKeyboardMarkup) {
+                    if(!column.requestContact) keyboardContent += QString(",\"request_contact\":%1").arg(column.requestContact ? "true" : "false");
+                    if(!column.requestLocation) keyboardContent += QString(",\"request_location\":%1").arg(column.requestLocation ? "true" : "false");
+                } else {
+                    if(!column.url.isEmpty()) keyboardContent += QString(",\"url\":\"%1\"").arg(column.url);
+                    if(!column.callbackData.isEmpty()) keyboardContent += QString(",\"callback_data\":\"%1\"").arg(column.callbackData);
+                    if(!column.switchInlineQuery.isEmpty()) keyboardContent += QString(",\"switch_inline_query\":\"%1\"").arg(column.switchInlineQuery);
+                    if(!column.switchInlineQueryCurrentChat.isEmpty()) keyboardContent += QString(",\"switch_inline_query_current_chat\":\"%1\"").arg(column.switchInlineQueryCurrentChat);
+                }
+                keyboardContent += "}";
+                firstColumn = false;
+            }
+            keyboardContent += "]";
+            firstRow = false;
+        }
+        keyboardContent += "]";
+
+        if(flags && TelegramFlags::ReplyKeyboardMarkup) {
+            replyMarkup += "{\"keyboard\":" + keyboardContent;
+            if(flags && TelegramFlags::ResizeKeyboard) replyMarkup += ",\"resize_keyboard\":true";
+            if(flags && TelegramFlags::OneTimeKeyboard) replyMarkup += ",\"one_time_keyboard\":true";
+            if(flags && TelegramFlags::Selective) replyMarkup += ",\"selective\":true";
+        } else {
+            replyMarkup += "{\"inline_keyboard\":" + keyboardContent;
+        }
+        replyMarkup += "}";
+    }
+    if(!replyMarkup.isEmpty()) params.addQueryItem("reply_markup", replyMarkup);
+}
+
