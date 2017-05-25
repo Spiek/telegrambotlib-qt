@@ -82,6 +82,16 @@ void TelegramBot::sendMessage(QVariant chatId, QString text, TelegramFlags flags
     this->callApi("sendMessage", params);
 }
 
+void TelegramBot::forwardMessage(QVariant chatId, QVariant fromChatId, qint32 messageId, TelegramFlags flags)
+{
+    QUrlQuery params;
+    params.addQueryItem("chat_id", chatId.toString());
+    params.addQueryItem("from_chat_id", fromChatId.toString());
+    params.addQueryItem("message_id", QString::number(messageId));
+    if(flags && TelegramFlags::DisableNotfication) params.addQueryItem("disable_notification", "true");
+
+    this->callApi("forwardMessage", params);
+}
 
 /*
  * Message Puller
