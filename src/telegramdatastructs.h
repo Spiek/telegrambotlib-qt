@@ -83,6 +83,9 @@ struct TelegramBotUser : public TelegramBotObject {
     QString lastName; // Optional. User‘s or bot’s last name
     QString username; // Optional. User‘s or bot’s username
 
+    TelegramBotUser() { }
+    TelegramBotUser(QJsonObject object) { this->fromJson(object); }
+
     // parse logic
     virtual void fromJson(QJsonObject& object) {
         JsonHelperT<qint32>::jsonPathGet(object, "id", this->id);
