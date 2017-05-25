@@ -67,6 +67,27 @@ void TelegramBot::sendPhoto(QVariant chatId, QVariant photo, QString caption, in
     this->callApi("sendPhoto", params, true, multiPart);
 }
 
+void TelegramBot::sendAudio(QVariant chatId, QVariant audio, QString caption, QString performer, QString title, int duration, int replyToMessageId, TelegramFlags flags, TelegramKeyboardRequest keyboard)
+{
+    QUrlQuery params;
+    params.addQueryItem("chat_id", chatId.toString());
+    if(!caption.isNull()) params.addQueryItem("caption", caption);
+    if(duration >= 0) params.addQueryItem("duration", QString::number(duration));
+    if(!performer.isNull()) params.addQueryItem("performer", performer);
+    if(!title.isNull()) params.addQueryItem("title", title);
+    if(flags && TelegramFlags::DisableNotfication) params.addQueryItem("disable_notification", "true");
+    if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
+
+    // handle reply markup
+    this->hanldeReplyMarkup(params, flags, keyboard);
+
+    // handle file
+    QHttpMultiPart* multiPart = this->handleFile("audio", audio, params);
+
+    // call api
+    this->callApi("sendAudio", params, true, multiPart);
+}
+
 /*
  * Message Puller
  */
@@ -427,10 +448,12 @@ QHttpMultiPart* TelegramBot::handleFile(QString fieldName, QVariant file, QUrlQu
 
         // upload the local file to telegram
         if(url.isLocalFile()) {
-            QFile fFile(url.toString());
-            if(!fFile.open(QFile::ReadOnly)) return multiPart;
+            QFile fFile(file.toString());
+            if(!fFile.open(QFile::ReadOnly)) {
+                qWarning("TelegramBot::handleFile - Cannot open file \"%s\"", qPrintable(file.toString()));
+                return multiPart;
+            }
             QByteArray content = fFile.readAll();
-            if(content.isEmpty()) return multiPart;
             QFileInfo fInfo(fFile);
             multiPart = this->createUploadFile(fieldName, fInfo.fileName(), content, true, multiPart);
         }
