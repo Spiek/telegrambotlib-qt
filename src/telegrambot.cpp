@@ -20,8 +20,6 @@ void TelegramBot::sendMessage(QVariant chatId, QString text, int replyToMessageI
     QUrlQuery params;
     params.addQueryItem("chat_id", chatId.toString());
     params.addQueryItem("text", text);
-
-    // handle flags
     if(flags && TelegramFlags::Markdown) params.addQueryItem("parse_mode", "Markdown");
     else if(flags && TelegramFlags::Html) params.addQueryItem("parse_mode", "HTML");
     if(flags && TelegramFlags::DisableWebPagePreview) params.addQueryItem("disable_web_page_preview", "true");
@@ -180,6 +178,22 @@ void TelegramBot::sendVideoNote(QVariant chatId, QVariant videoNote, int length,
 
     // call api
     this->callApi("sendVideoNote", params, true, multiPart);
+}
+
+void TelegramBot::sendLocation(QVariant chatId, double latitude, double longitude, int replyToMessageId, TelegramFlags flags, TelegramKeyboardRequest keyboard)
+{
+    QUrlQuery params;
+    params.addQueryItem("chat_id", chatId.toString());
+    params.addQueryItem("latitude", QString::number(latitude));
+    params.addQueryItem("longitude", QString::number(longitude));
+    if(flags && TelegramFlags::DisableNotfication) params.addQueryItem("disable_notification", "true");
+    if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
+
+    // handle reply markup
+    this->hanldeReplyMarkup(params, flags, keyboard);
+
+    // call api
+    this->callApi("sendLocation", params);
 }
 
 /*
