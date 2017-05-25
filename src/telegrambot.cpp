@@ -106,6 +106,23 @@ void TelegramBot::sendDocument(QVariant chatId, QVariant document, QString capti
     this->callApi("sendDocument", params, true, multiPart);
 }
 
+void TelegramBot::sendSticker(QVariant chatId, QVariant sticker, int replyToMessageId, TelegramFlags flags, TelegramKeyboardRequest keyboard)
+{
+    QUrlQuery params;
+    params.addQueryItem("chat_id", chatId.toString());
+    if(flags && TelegramFlags::DisableNotfication) params.addQueryItem("disable_notification", "true");
+    if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
+
+    // handle reply markup
+    this->hanldeReplyMarkup(params, flags, keyboard);
+
+    // handle file
+    QHttpMultiPart* multiPart = this->handleFile("sticker", sticker, params);
+
+    // call api
+    this->callApi("sendSticker", params, true, multiPart);
+}
+
 /*
  * Message Puller
  */
@@ -482,8 +499,8 @@ QHttpMultiPart* TelegramBot::handleFile(QString fieldName, QVariant file, QUrlQu
         }
     }
 
-    // if we have an int as content given, we interpret it as telegram file id
-    else if(file.canConvert<qint32>()) {
+    // otherwise we interpret it as telegram file id
+    else {
         params.addQueryItem(fieldName, file.toString());
     }
 
