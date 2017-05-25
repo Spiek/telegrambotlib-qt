@@ -88,6 +88,24 @@ void TelegramBot::sendAudio(QVariant chatId, QVariant audio, QString caption, QS
     this->callApi("sendAudio", params, true, multiPart);
 }
 
+void TelegramBot::sendDocument(QVariant chatId, QVariant document, QString caption, int replyToMessageId, TelegramFlags flags, TelegramKeyboardRequest keyboard)
+{
+    QUrlQuery params;
+    params.addQueryItem("chat_id", chatId.toString());
+    if(!caption.isNull()) params.addQueryItem("caption", caption);
+    if(flags && TelegramFlags::DisableNotfication) params.addQueryItem("disable_notification", "true");
+    if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
+
+    // handle reply markup
+    this->hanldeReplyMarkup(params, flags, keyboard);
+
+    // handle file
+    QHttpMultiPart* multiPart = this->handleFile("document", document, params);
+
+    // call api
+    this->callApi("sendDocument", params, true, multiPart);
+}
+
 /*
  * Message Puller
  */
