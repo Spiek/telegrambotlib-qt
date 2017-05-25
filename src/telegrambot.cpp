@@ -123,6 +123,27 @@ void TelegramBot::sendSticker(QVariant chatId, QVariant sticker, int replyToMess
     this->callApi("sendSticker", params, true, multiPart);
 }
 
+void TelegramBot::sendVideo(QVariant chatId, QVariant video, QString caption, int duration, int width, int height, int replyToMessageId, TelegramFlags flags, TelegramKeyboardRequest keyboard)
+{
+    QUrlQuery params;
+    params.addQueryItem("chat_id", chatId.toString());
+    if(!caption.isNull()) params.addQueryItem("caption", caption);
+    if(duration >= 0) params.addQueryItem("duration", QString::number(duration));
+    if(width >= 0) params.addQueryItem("width", QString::number(width));
+    if(height >= 0) params.addQueryItem("height", QString::number(height));
+    if(flags && TelegramFlags::DisableNotfication) params.addQueryItem("disable_notification", "true");
+    if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
+
+    // handle reply markup
+    this->hanldeReplyMarkup(params, flags, keyboard);
+
+    // handle file
+    QHttpMultiPart* multiPart = this->handleFile("video", video, params);
+
+    // call api
+    this->callApi("sendVideo", params, true, multiPart);
+}
+
 /*
  * Message Puller
  */
