@@ -163,6 +163,25 @@ void TelegramBot::sendVoice(QVariant chatId, QVariant voice, QString caption, in
     this->callApi("sendVoice", params, true, multiPart);
 }
 
+void TelegramBot::sendVideoNote(QVariant chatId, QVariant videoNote, int length, int duration, int replyToMessageId, TelegramFlags flags, TelegramKeyboardRequest keyboard)
+{
+    QUrlQuery params;
+    params.addQueryItem("chat_id", chatId.toString());
+    params.addQueryItem("length", QString::number(length));
+    if(duration >= 0) params.addQueryItem("duration", QString::number(duration));
+    if(flags && TelegramFlags::DisableNotfication) params.addQueryItem("disable_notification", "true");
+    if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
+
+    // handle reply markup
+    this->hanldeReplyMarkup(params, flags, keyboard);
+
+    // handle file
+    QHttpMultiPart* multiPart = this->handleFile("video_note", videoNote, params);
+
+    // call api
+    this->callApi("sendVideoNote", params, true, multiPart);
+}
+
 /*
  * Message Puller
  */
