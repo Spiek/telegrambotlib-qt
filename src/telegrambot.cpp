@@ -4,11 +4,17 @@ QMap<qint16, HttpServer*> TelegramBot::webHookWebServers = QMap<qint16, HttpServ
 
 TelegramBot::TelegramBot(QString apikey, QObject *parent) : QObject(parent), apiKey(apikey) { }
 
+/*
+ * Info Functions
+ */
 TelegramBotUser TelegramBot::getMe()
 {
     return TelegramBotUser(this->callApiJson("getMe").value("result").toObject());
 }
 
+/*
+ * Message Functions
+ */
 void TelegramBot::sendMessage(QVariant chatId, QString text, TelegramFlags flags, int replyToMessageId, TelegramKeyboardRequest keyboard)
 {
     QUrlQuery params;
@@ -161,7 +167,7 @@ void TelegramBot::handlePullResponse()
 }
 
 /*
- *  Message Poller
+ *  Webhook Functions
  */
 bool TelegramBot::setHttpServerWebhook(qint16 port, QString pathCert, QString pathPrivateKey, int maxConnections, TelegramPollMessageTypes messageTypes)
 {

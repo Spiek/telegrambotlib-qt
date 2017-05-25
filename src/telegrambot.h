@@ -76,18 +76,18 @@ class TelegramBot : public QObject
         };
         TelegramBot(QString apikey, QObject *parent = 0);
 
-        // info functions
+        // Info Functions
         TelegramBotUser getMe();
 
-        // message functions
+        // Message Functions
         void sendMessage(QVariant chatId, QString text, TelegramFlags flags = TelegramFlags::NoFlag, int replyToMessageId = 0, TelegramKeyboardRequest keyboard = TelegramKeyboardRequest());
         void forwardMessage(QVariant chatId, QVariant fromChatId, qint32 messageId, TelegramFlags flags = TelegramFlags::NoFlag);
 
-        // pull functions
+        // Message Puller
         void startMessagePulling(uint timeout = 10, uint limit = 100, TelegramPollMessageTypes messageTypes = TelegramPollMessageTypes::All, long offset = 0);
         void stopMessagePulling(bool instantly = false);
 
-        // webhook functions
+        // Webhook Functions
         bool setHttpServerWebhook(qint16 port, QString pathCert, QString pathPrivateKey, int maxConnections = 10, TelegramPollMessageTypes messageTypes = TelegramPollMessageTypes::All);
         void deleteWebhook();
         TelegramBotOperationResult deleteWebhookResult();
