@@ -192,7 +192,7 @@ void TelegramBot::editMessageText(QVariant chatId, QVariant messageId, QString t
     this->callApi("editMessageText", params);
 }
 
-void TelegramBot::editMessageCaption(QVariant chatId, QVariant messageId, QString caption, TelegramFlags flags, TelegramKeyboardRequest keyboard)
+void TelegramBot::editMessageCaption(QVariant chatId, QVariant messageId, QString caption, TelegramKeyboardRequest keyboard)
 {
     // determine message id type
     bool isInlineMessageId = messageId.type() == QVariant::String;
@@ -203,12 +203,26 @@ void TelegramBot::editMessageCaption(QVariant chatId, QVariant messageId, QStrin
     if(!caption.isNull()) params.addQueryItem("caption", caption);
 
     // only build inline keyboard
-    if(!(flags && TelegramFlags::ReplyKeyboardMarkup) && !(flags && TelegramFlags::ForceReply) && !(flags && TelegramFlags::ReplyKeyboardRemove)) {
-        this->hanldeReplyMarkup(params, flags, keyboard);
-    }
+    this->hanldeReplyMarkup(params, TelegramFlags(), keyboard);
 
     // call api
-    this->callApi("editMessageText", params);
+    this->callApi("editMessageCaption", params);
+}
+
+void TelegramBot::editMessageReplyMarkup(QVariant chatId, QVariant messageId, TelegramKeyboardRequest keyboard)
+{
+    // determine message id type
+    bool isInlineMessageId = messageId.type() == QVariant::String;
+
+    QUrlQuery params;
+    if(!isInlineMessageId && !chatId.isNull()) params.addQueryItem("chat_id", chatId.toString());
+    params.addQueryItem(isInlineMessageId ? "inline_message_id" : "message_id", messageId.toString());
+
+    // only build inline keyboard
+    this->hanldeReplyMarkup(params, TelegramFlags(), keyboard);
+
+    // call api
+    this->callApi("editMessageReplyMarkup", params);
 }
 
 void TelegramBot::forwardMessage(QVariant targetChatId, QVariant fromChatId, qint32 fromMessageId, TelegramFlags flags)
