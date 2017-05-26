@@ -170,7 +170,7 @@ void TelegramBot::sendMessage(QVariant chatId, QString text, int replyToMessageI
     this->callApi("sendMessage", params);
 }
 
-void TelegramBot::editMessage(QVariant chatId, QVariant messageId, QString text, TelegramFlags flags, TelegramKeyboardRequest keyboard)
+void TelegramBot::editMessageText(QVariant chatId, QVariant messageId, QString text, TelegramFlags flags, TelegramKeyboardRequest keyboard)
 {
     // determine message id type
     bool isInlineMessageId = messageId.type() == QVariant::String;
