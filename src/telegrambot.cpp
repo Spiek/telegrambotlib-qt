@@ -215,6 +215,23 @@ void TelegramBot::sendVenue(QVariant chatId, double latitude, double longitude, 
     this->callApi("sendVenue", params);
 }
 
+void TelegramBot::sendContact(QVariant chatId, QString phoneNumber, QString firstName, QString lastName, int replyToMessageId, TelegramFlags flags, TelegramKeyboardRequest keyboard)
+{
+    QUrlQuery params;
+    params.addQueryItem("chat_id", chatId.toString());
+    params.addQueryItem("phone_number", phoneNumber);
+    params.addQueryItem("first_name", firstName);
+    if(!lastName.isNull()) params.addQueryItem("last_name", lastName);
+    if(flags && TelegramFlags::DisableNotfication) params.addQueryItem("disable_notification", "true");
+    if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
+
+    // handle reply markup
+    this->hanldeReplyMarkup(params, flags, keyboard);
+
+    // call api
+    this->callApi("sendContact", params);
+}
+
 /*
  * Message Puller
  */
