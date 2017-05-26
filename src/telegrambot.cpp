@@ -134,6 +134,22 @@ TelegramBotChatMember TelegramBot::getChatMember(QVariant chatId, qint32 userId)
 }
 
 /*
+ * Inline Query Functions
+ */
+void TelegramBot::answerCallbackQuery(QString callbackQueryId, QString text, bool showAlert, int cacheTime, QString url)
+{
+    QUrlQuery params;
+    params.addQueryItem("callback_query_id", callbackQueryId);
+    if(!text.isNull()) params.addQueryItem("text", text);
+    if(showAlert) params.addQueryItem("show_alert", "true");
+    if(!url.isNull()) params.addQueryItem("url", url);
+    if(cacheTime > 0) params.addQueryItem("cache_time", QString::number(cacheTime));
+
+    this->callApi("answerCallbackQuery", params);
+}
+
+
+/*
  * Message Functions
  */
 void TelegramBot::sendMessage(QVariant chatId, QString text, int replyToMessageId, TelegramFlags flags, TelegramKeyboardRequest keyboard)

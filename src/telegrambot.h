@@ -97,6 +97,9 @@ class TelegramBot : public QObject
         int getChatMembersCount(QVariant chatId);
         TelegramBotChatMember getChatMember(QVariant chatId, qint32 userId);
 
+        // Inline Query Functions
+        void answerCallbackQuery(QString callbackQueryId, QString text = QString(), bool showAlert = false, int cacheTime = 0, QString url = QString());
+
         // Message Functions
         void sendMessage(QVariant chatId, QString text, int replyToMessageId = 0, TelegramFlags flags = TelegramFlags::NoFlag, TelegramKeyboardRequest keyboard = TelegramKeyboardRequest());
         void forwardMessage(QVariant targetChatId, QVariant fromChatId, qint32 fromMessageId, TelegramFlags flags = TelegramFlags::NoFlag);
