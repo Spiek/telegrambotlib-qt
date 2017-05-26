@@ -172,13 +172,35 @@ void TelegramBot::sendMessage(QVariant chatId, QString text, int replyToMessageI
 
 void TelegramBot::editMessage(QVariant chatId, QVariant messageId, QString text, TelegramFlags flags, TelegramKeyboardRequest keyboard)
 {
+    // determine message id type
+    bool isInlineMessageId = messageId.type() == QVariant::String;
+
     QUrlQuery params;
-    params.addQueryItem("chat_id", chatId.toString());
-    params.addQueryItem(messageId.canConvert<qint32>() ? "message_id" : "inline_message_id", messageId.toString());
+    if(!isInlineMessageId && !chatId.isNull()) params.addQueryItem("chat_id", chatId.toString());
+    params.addQueryItem(isInlineMessageId ? "inline_message_id" : "message_id", messageId.toString());
     params.addQueryItem("text", text);
     if(flags && TelegramFlags::Markdown) params.addQueryItem("parse_mode", "Markdown");
     else if(flags && TelegramFlags::Html) params.addQueryItem("parse_mode", "HTML");
     if(flags && TelegramFlags::DisableWebPagePreview) params.addQueryItem("disable_web_page_preview", "true");
+
+    // only build inline keyboard
+    if(!(flags && TelegramFlags::ReplyKeyboardMarkup) && !(flags && TelegramFlags::ForceReply) && !(flags && TelegramFlags::ReplyKeyboardRemove)) {
+        this->hanldeReplyMarkup(params, flags, keyboard);
+    }
+
+    // call api
+    this->callApi("editMessageText", params);
+}
+
+void TelegramBot::editMessageCaption(QVariant chatId, QVariant messageId, QString caption, TelegramFlags flags, TelegramKeyboardRequest keyboard)
+{
+    // determine message id type
+    bool isInlineMessageId = messageId.type() == QVariant::String;
+
+    QUrlQuery params;
+    if(!isInlineMessageId && !chatId.isNull()) params.addQueryItem("chat_id", chatId.toString());
+    params.addQueryItem(isInlineMessageId ? "inline_message_id" : "message_id", messageId.toString());
+    if(!caption.isNull()) params.addQueryItem("caption", caption);
 
     // only build inline keyboard
     if(!(flags && TelegramFlags::ReplyKeyboardMarkup) && !(flags && TelegramFlags::ForceReply) && !(flags && TelegramFlags::ReplyKeyboardRemove)) {
