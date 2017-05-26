@@ -236,6 +236,15 @@ void TelegramBot::forwardMessage(QVariant targetChatId, QVariant fromChatId, qin
     this->callApi("forwardMessage", params);
 }
 
+void TelegramBot::deleteMessage(QVariant chatId, qint32 messageId)
+{
+    QUrlQuery params;
+    params.addQueryItem("chat_id", chatId.toString());
+    params.addQueryItem("message_id", QString::number(messageId));
+
+    this->callApi("deleteMessage", params);
+}
+
 /*
  * Content Functions
  */
