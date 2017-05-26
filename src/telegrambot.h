@@ -84,6 +84,9 @@ class TelegramBot : public QObject
         void sendChatAction(QVariant chatId, TelegramChatAction action);
         void sendChatAction(QVariant chatId, QString action);
 
+        // User Functions
+        TelegramBotUserProfilePhotos getUserProfilePhotos(qint32 userId, int offset = 0, int limit = 0);
+
         // Message Functions
         void sendMessage(QVariant chatId, QString text, int replyToMessageId = 0, TelegramFlags flags = TelegramFlags::NoFlag, TelegramKeyboardRequest keyboard = TelegramKeyboardRequest());
         void forwardMessage(QVariant targetChatId, QVariant fromChatId, qint32 fromMessageId, TelegramFlags flags = TelegramFlags::NoFlag);

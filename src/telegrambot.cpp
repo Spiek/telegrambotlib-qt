@@ -40,6 +40,21 @@ void TelegramBot::sendChatAction(QVariant chatId, QString action)
 }
 
 /*
+ * User Functions
+ */
+TelegramBotUserProfilePhotos TelegramBot::getUserProfilePhotos(qint32 userId, int offset, int limit)
+{
+    QUrlQuery params;
+    params.addQueryItem("user_id", QString::number(userId));
+    if(offset > 0) params.addQueryItem("offset", QString::number(offset));
+    if(limit > 0) params.addQueryItem("limit", QString::number(limit));
+
+    // call api and return constructed data
+    return TelegramBotUserProfilePhotos(this->callApiJson("getUserProfilePhotos", params).value("result").toObject());
+}
+
+
+/*
  * Message Functions
  */
 void TelegramBot::sendMessage(QVariant chatId, QString text, int replyToMessageId, TelegramFlags flags, TelegramKeyboardRequest keyboard)

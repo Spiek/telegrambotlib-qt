@@ -381,9 +381,11 @@ struct TelegramBotVenue : public TelegramBotObject {
 };
 
 // This object represent a user's profile pictures.
-struct UserProfilePhotos : public TelegramBotObject {
+struct TelegramBotUserProfilePhotos : public TelegramBotObject {
     qint32 totalCount; // Total number of profile pictures the target user has
     QList<QList<TelegramBotPhotoSize>> photos; // Requested profile pictures (in up to 4 sizes each)
+
+    TelegramBotUserProfilePhotos(QJsonObject object) { this->fromJson(object); }
 
     // parse logic
     virtual void fromJson(QJsonObject& object) {
