@@ -81,7 +81,7 @@ class TelegramBot : public QObject
 
         // Bot Functions
         TelegramBotUser getMe();
-        void sendChatAction(QVariant chatId, TelegramChatAction action);
+        void sendChatAction(QVariant chatId, TelegramBotChatAction action);
         void sendChatAction(QVariant chatId, QString action);
         TelegramBotFile getFile(QString fileId, bool generateAbsoluteLink = false);
 

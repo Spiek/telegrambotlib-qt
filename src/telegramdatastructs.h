@@ -33,7 +33,7 @@ typedef QList<QList<TelegramBotKeyboardButtonRequest>> TelegramKeyboardRequest;
  */
 
 // TelegramChatAction - This object represents all possible Teletram chat actions
-enum class TelegramChatAction
+enum class TelegramBotChatAction
 {
     Typing,
     UploadPhoto,

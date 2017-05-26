@@ -12,18 +12,18 @@ TelegramBotUser TelegramBot::getMe()
     return TelegramBotUser(this->callApiJson("getMe").value("result").toObject());
 }
 
-void TelegramBot::sendChatAction(QVariant chatId, TelegramChatAction action)
+void TelegramBot::sendChatAction(QVariant chatId, TelegramBotChatAction action)
 {
-    return this->sendChatAction(chatId, action == TelegramChatAction::Typing            ? "typing" :
-                                        action == TelegramChatAction::UploadPhoto       ? "upload_photo" :
-                                        action == TelegramChatAction::RecordVideo       ? "record_video" :
-                                        action == TelegramChatAction::UploadVideo       ? "upload_video" :
-                                        action == TelegramChatAction::RecordAudio       ? "record_audio" :
-                                        action == TelegramChatAction::UploadAudio       ? "upload_audio" :
-                                        action == TelegramChatAction::UploadDocument    ? "upload_document" :
-                                        action == TelegramChatAction::FindLocation      ? "find_location" :
-                                        action == TelegramChatAction::RecordVideoNote   ? "record_video_note" :
-                                        action == TelegramChatAction::UploadVideoNote   ? "upload_video_note" : "");
+    return this->sendChatAction(chatId, action == TelegramBotChatAction::Typing            ? "typing" :
+                                        action == TelegramBotChatAction::UploadPhoto       ? "upload_photo" :
+                                        action == TelegramBotChatAction::RecordVideo       ? "record_video" :
+                                        action == TelegramBotChatAction::UploadVideo       ? "upload_video" :
+                                        action == TelegramBotChatAction::RecordAudio       ? "record_audio" :
+                                        action == TelegramBotChatAction::UploadAudio       ? "upload_audio" :
+                                        action == TelegramBotChatAction::UploadDocument    ? "upload_document" :
+                                        action == TelegramBotChatAction::FindLocation      ? "find_location" :
+                                        action == TelegramBotChatAction::RecordVideoNote   ? "record_video_note" :
+                                        action == TelegramBotChatAction::UploadVideoNote   ? "upload_video_note" : "");
 }
 
 void TelegramBot::sendChatAction(QVariant chatId, QString action)
