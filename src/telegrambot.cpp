@@ -134,7 +134,7 @@ TelegramBotChatMember TelegramBot::getChatMember(QVariant chatId, qint32 userId)
 }
 
 /*
- * Inline Query Functions
+ * Callback Query Functions
  */
 void TelegramBot::answerCallbackQuery(QString callbackQueryId, QString text, bool showAlert, int cacheTime, QString url)
 {
