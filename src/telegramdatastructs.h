@@ -32,6 +32,21 @@ typedef QList<QList<TelegramBotKeyboardButtonRequest>> TelegramKeyboardRequest;
  *  Telegram System Data Structs
  */
 
+// TelegramChatAction - This object represents all possible Teletram chat actions
+enum class TelegramChatAction
+{
+    Typing,
+    UploadPhoto,
+    RecordVideo,
+    UploadVideo,
+    RecordAudio,
+    UploadAudio,
+    UploadDocument,
+    FindLocation,
+    RecordVideoNote,
+    UploadVideoNote
+};
+
 // TelegramBotOperationResult - This object represents a Telegram Operation result
 struct TelegramBotOperationResult : public TelegramBotObject {
     bool result;

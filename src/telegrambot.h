@@ -79,8 +79,10 @@ class TelegramBot : public QObject
         };
         TelegramBot(QString apikey, QObject *parent = 0);
 
-        // Info Functions
+        // Bot Functions
         TelegramBotUser getMe();
+        void sendChatAction(QVariant chatId, TelegramChatAction action);
+        void sendChatAction(QVariant chatId, QString action);
 
         // Message Functions
         void sendMessage(QVariant chatId, QString text, int replyToMessageId = 0, TelegramFlags flags = TelegramFlags::NoFlag, TelegramKeyboardRequest keyboard = TelegramKeyboardRequest());

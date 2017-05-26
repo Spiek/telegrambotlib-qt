@@ -5,11 +5,38 @@ QMap<qint16, HttpServer*> TelegramBot::webHookWebServers = QMap<qint16, HttpServ
 TelegramBot::TelegramBot(QString apikey, QObject *parent) : QObject(parent), apiKey(apikey) { }
 
 /*
- * Info Functions
+ * Bot Functions
  */
 TelegramBotUser TelegramBot::getMe()
 {
     return TelegramBotUser(this->callApiJson("getMe").value("result").toObject());
+}
+
+void TelegramBot::sendChatAction(QVariant chatId, TelegramChatAction action)
+{
+    return this->sendChatAction(chatId, action == TelegramChatAction::Typing            ? "typing" :
+                                        action == TelegramChatAction::UploadPhoto       ? "upload_photo" :
+                                        action == TelegramChatAction::RecordVideo       ? "record_video" :
+                                        action == TelegramChatAction::UploadVideo       ? "upload_video" :
+                                        action == TelegramChatAction::RecordAudio       ? "record_audio" :
+                                        action == TelegramChatAction::UploadAudio       ? "upload_audio" :
+                                        action == TelegramChatAction::UploadDocument    ? "upload_document" :
+                                        action == TelegramChatAction::FindLocation      ? "find_location" :
+                                        action == TelegramChatAction::RecordVideoNote   ? "record_video_note" :
+                                        action == TelegramChatAction::UploadVideoNote   ? "upload_video_note" : "");
+}
+
+void TelegramBot::sendChatAction(QVariant chatId, QString action)
+{
+    // param check
+    if(action.isEmpty()) return;
+
+    QUrlQuery params;
+    params.addQueryItem("chat_id", chatId.toString());
+    params.addQueryItem("action", action);
+
+    // call api
+    this->callApi("sendChatAction", params);
 }
 
 /*
