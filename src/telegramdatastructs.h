@@ -228,6 +228,9 @@ struct TelegramBotChat : public TelegramBotObject {
     QString lastName; // Optional. Last name of the other party in a private chat
     bool allMembersAreAdministrators; // Optional. True if a group has ‘All Members Are Admins’ enabled.
 
+    TelegramBotChat() {}
+    TelegramBotChat(QJsonObject object) { this->fromJson(object); }
+
     // parse logic
     virtual void fromJson(QJsonObject& object) {
         JsonHelperT<qint32>::jsonPathGet(object, "id", this->id);
@@ -416,6 +419,9 @@ struct TelegramBotFile : public TelegramBotObject {
 struct TelegramBotChatMember : public TelegramBotObject {
     TelegramBotUser user; // Information about the user
     QString status; // The member's status in the chat. Can be “creator”, “administrator”, “member”, “left” or “kicked”
+
+    TelegramBotChatMember() {}
+    TelegramBotChatMember(QJsonObject object) { this->fromJson(object); }
 
     // parse logic
     virtual void fromJson(QJsonObject& object) {

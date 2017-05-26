@@ -69,6 +69,69 @@ TelegramBotUserProfilePhotos TelegramBot::getUserProfilePhotos(qint32 userId, in
     return TelegramBotUserProfilePhotos(this->callApiJson("getUserProfilePhotos", params).value("result").toObject());
 }
 
+/*
+ * Chat Functions
+ */
+void TelegramBot::kickChatMember(QVariant chatId, qint32 userId)
+{
+    QUrlQuery params;
+    params.addQueryItem("chat_id", chatId.toString());
+    params.addQueryItem("user_id", QString::number(userId));
+
+    this->callApi("kickChatMember", params);
+}
+
+void TelegramBot::unbanChatMember(QVariant chatId, qint32 userId)
+{
+    QUrlQuery params;
+    params.addQueryItem("chat_id", chatId.toString());
+    params.addQueryItem("user_id", QString::number(userId));
+
+    this->callApi("unbanChatMember", params);
+}
+
+void TelegramBot::leaveChat(QVariant chatId)
+{
+    QUrlQuery params;
+    params.addQueryItem("chat_id", chatId.toString());
+
+    this->callApi("leaveChat", params);
+}
+
+TelegramBotChat TelegramBot::getChat(QVariant chatId)
+{
+    QUrlQuery params;
+    params.addQueryItem("chat_id", chatId.toString());
+
+    return TelegramBotChat(this->callApiJson("getChat", params).value("result").toObject());
+}
+
+QList<TelegramBotChatMember> TelegramBot::getChatAdministrators(QVariant chatId)
+{
+    QUrlQuery params;
+    params.addQueryItem("chat_id", chatId.toString());
+
+    // call api and parse result
+    QList<TelegramBotChatMember> chatMemebers;
+    JsonHelperT<TelegramBotChatMember>::jsonPathGetArray(this->callApiJson("getChatAdministrators", params), "result", chatMemebers);
+    return chatMemebers;
+}
+
+int TelegramBot::getChatMembersCount(QVariant chatId)
+{
+    QUrlQuery params;
+    params.addQueryItem("chat_id", chatId.toString());
+    return this->callApiJson("getChatMembersCount", params).value("result").toInt();
+}
+
+TelegramBotChatMember TelegramBot::getChatMember(QVariant chatId, qint32 userId)
+{
+    QUrlQuery params;
+    params.addQueryItem("chat_id", chatId.toString());
+    params.addQueryItem("user_id", QString::number(userId));
+
+    return TelegramBotChatMember(this->callApiJson("getChatMember", params).value("result").toObject());
+}
 
 /*
  * Message Functions

@@ -88,6 +88,15 @@ class TelegramBot : public QObject
         // User Functions
         TelegramBotUserProfilePhotos getUserProfilePhotos(qint32 userId, int offset = 0, int limit = 0);
 
+        // Chat Functions
+        void kickChatMember(QVariant chatId, qint32 userId);
+        void unbanChatMember(QVariant chatId, qint32 userId);
+        void leaveChat(QVariant chatId);
+        TelegramBotChat getChat(QVariant chatId);
+        QList<TelegramBotChatMember> getChatAdministrators(QVariant chatId);
+        int getChatMembersCount(QVariant chatId);
+        TelegramBotChatMember getChatMember(QVariant chatId, qint32 userId);
+
         // Message Functions
         void sendMessage(QVariant chatId, QString text, int replyToMessageId = 0, TelegramFlags flags = TelegramFlags::NoFlag, TelegramKeyboardRequest keyboard = TelegramKeyboardRequest());
         void forwardMessage(QVariant targetChatId, QVariant fromChatId, qint32 fromMessageId, TelegramFlags flags = TelegramFlags::NoFlag);
