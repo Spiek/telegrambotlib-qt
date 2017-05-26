@@ -39,6 +39,22 @@ void TelegramBot::sendChatAction(QVariant chatId, QString action)
     this->callApi("sendChatAction", params);
 }
 
+TelegramBotFile TelegramBot::getFile(QString fileId, bool generateAbsoluteLink)
+{
+    // prepare
+    QDateTime validUntil = QDateTime::currentDateTime().addSecs(3600);
+
+    // build params
+    QUrlQuery params;
+    params.addQueryItem("file_id", fileId);
+
+    // construct TelegramBotFile
+    TelegramBotFile file(this->callApiJson("getFile", params).value("result").toObject());
+    file.validUntil = validUntil;
+    if(generateAbsoluteLink && !file.filePath.isEmpty()) file.link = QString("https://api.telegram.org/file/bot%1/%2").arg(this->apiKey, file.filePath);
+    return file;
+}
+
 /*
  * User Functions
  */

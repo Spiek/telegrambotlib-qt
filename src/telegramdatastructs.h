@@ -399,6 +399,10 @@ struct TelegramBotFile : public TelegramBotObject {
     QString fileId; // Unique identifier for this file
     qint32 fileSize; // Optional. File size, if known
     QString filePath; // Optional. File path. Use https://api.telegram.org/file/bot<token>/<file_path> to get the file.
+    QString link; // Generated Absolute link to picture
+    QDateTime validUntil; // Genetated valid time
+
+    TelegramBotFile(QJsonObject object) { this->fromJson(object); }
 
     // parse logic
     virtual void fromJson(QJsonObject& object) {

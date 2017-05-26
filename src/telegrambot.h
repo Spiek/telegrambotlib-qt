@@ -83,6 +83,7 @@ class TelegramBot : public QObject
         TelegramBotUser getMe();
         void sendChatAction(QVariant chatId, TelegramChatAction action);
         void sendChatAction(QVariant chatId, QString action);
+        TelegramBotFile getFile(QString fileId, bool generateAbsoluteLink = false);
 
         // User Functions
         TelegramBotUserProfilePhotos getUserProfilePhotos(qint32 userId, int offset = 0, int limit = 0);
