@@ -91,11 +91,8 @@ int main(int argc, char** argv)
 
 ### Communication
 
-The Tegrambot library gives you also the possibility to communicate with chats
-
-<details><summary>Send Message - sends a message to a chat</summary>
-
-Represent [sendMessage](https://core.telegram.org/bots/api#sendmessage) function
+The Tegrambot library gives you also the possibility to communicate with chats.  
+Here is an example which should explain the basic use cases:
 
 ```c++
 #include <QCoreApplication>
@@ -106,24 +103,73 @@ int main(int argc, char** argv)
     QCoreApplication a(argc, argv);
 
     TelegramBot bot("APIKEY");
-    bot.sendMessage("Chat_ID", "Please <b>choose</b>", TelegramBot::Html, 0, {
-                            // row 1
-                            {
-                                // columns
-                                { "Google", "https://www.google.com", "", "", "", false, false },
-                                { "Reply with data", "", "MYDATA1", "", "", false, false },
-                            },
+    QObject::connect(&bot, &TelegramBot::newMessage, [&bot](TelegramBotMessage message) {
+        // send message (Format: Normal)
+        TelegramBotMessage msgSent;
+        bot.sendMessage(message.chat.id,
+        				"This is a Testmessage",
+                        0,
+                        TelegramBot::NoFlag,
+                        TelegramKeyboardRequest(),
+                        &msgSent);
 
-                            // row 2
+        // edit text of sent message (Format: Markdown)
+        bot.editMessageText(message.chat.id,
+        					msgSent.messageId,
+                            "This is an edited *Testmessage*",
+                            TelegramBot::Markdown);
+
+        // send message (Format: HTML, Keyboard: Inline (2 Rows, 1 Column), Reply to Message: Yes)
+        bot.sendMessage(message.chat.id,
+                        "Please <b>choose</b>",
+                        0,
+                        TelegramBot::Html,
+                        {
+                            // Keyboard
                             {
-                                // columns
-                                { "Reply with data", "", "MYDATA2", "", "", false, false },
-                                { "Wikipedia", "https://en.wikipedia.org", "", "", "", false, false },
+                                { "Google", "https://www.google.com", "", "", "", false, false },
+                            }, {
+                                { "Reply with data", "", "MYDATA1", "", "", false, false },
                             }
-                        }
-                    );
+                        });
+
+        // send photo (file location: web)
+        bot.sendPhoto(message.chat.id,
+                      "https://www.kernel.org/theme/images/logos/tux.png",
+                      "This is the Linux Tux");
+
+        // send audio (file location: local)
+        bot.sendAudio(message.chat.id,
+                      "Maktone - Fluke01.mp3",
+                      "Listen to this great art :-)",
+                      "Maktone",
+                      "Fluke01");
+
+        // send video chat note (file location: QByteArray)
+        QFile file("testvideo.mp4");
+        file.open(QFile::ReadOnly);
+        QByteArray content = file.readAll();
+        bot.sendVideoNote(msgSent.chat.id, content);
+
+        // send sticker (file location: telegram server)
+        bot.sendSticker(message.chat.id, "CXXXXXXXXXXXXXXXXXXXXXXX");
+    });
+    bot.startMessagePulling();
                     
    return a.exec();
 }
 ```
-</details>
+
+This example produces the following Telgram messages:  
+![result](https://raw.githubusercontent.com/Spiek/telegrambotlib-qt/master/doc/readme-example-result.png)
+
+### Additional Notes
+File Handing  
+The library provides four different opportunities for sending a file to telegram
+*  Web: just provide an web link as string
+*  Local file: just provide a local file path as string
+*  QBytearray: just call with a QBytearray which contains the data (The library also try to detect its content type!)
+*  Telegram Server: just call with an telegram file id as string   
+
+Note: file uploades are handled asynyron!   
+A possible use case for all types are also available in the example above.
