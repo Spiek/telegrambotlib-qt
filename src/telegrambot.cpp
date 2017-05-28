@@ -366,7 +366,7 @@ void TelegramBot::sendVideoNote(QVariant chatId, QVariant videoNote, int length,
 {
     QUrlQuery params;
     params.addQueryItem("chat_id", chatId.toString());
-    params.addQueryItem("length", QString::number(length));
+    if(length >= 0) params.addQueryItem("length", QString::number(length));
     if(duration >= 0) params.addQueryItem("duration", QString::number(duration));
     if(flags && TelegramFlags::DisableNotfication) params.addQueryItem("disable_notification", "true");
     if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
@@ -815,7 +815,7 @@ QHttpMultiPart* TelegramBot::handleFile(QString fieldName, QVariant file, QUrlQu
         QUrl url = QUrl::fromUserInput(file.toString());
 
         // upload the local file to telegram
-        if(url.isLocalFile()) {
+        if(url.isLocalFile() || url.isRelative()) {
             QFile fFile(file.toString());
             if(!fFile.open(QFile::ReadOnly)) {
                 qWarning("TelegramBot::handleFile - Cannot open file \"%s\"", qPrintable(file.toString()));
