@@ -494,7 +494,7 @@ void TelegramBot::handlePullResponse()
     this->parseMessage(data);
 
     // add update id to request
-    this->pullParams.addQueryItem("offset", QString::number(++this->updateId));
+    if(this->updateId) this->pullParams.addQueryItem("offset", QString::number(this->updateId + 1));
 
     // continue pulling
     this->pull();
