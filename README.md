@@ -107,7 +107,7 @@ int main(int argc, char** argv)
         // send message (Format: Normal)
         TelegramBotMessage msgSent;
         bot.sendMessage(message.chat.id,
-        				"This is a Testmessage",
+                        "This is a Testmessage",
                         0,
                         TelegramBot::NoFlag,
                         TelegramKeyboardRequest(),
@@ -115,7 +115,7 @@ int main(int argc, char** argv)
 
         // edit text of sent message (Format: Markdown)
         bot.editMessageText(message.chat.id,
-        					msgSent.messageId,
+                            msgSent.messageId,
                             "This is an edited *Testmessage*",
                             TelegramBot::Markdown);
 
