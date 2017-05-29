@@ -106,10 +106,10 @@ int main(int argc, char** argv)
     QObject::connect(&bot, &TelegramBot::newMessage, [&bot](TelegramBotUpdate update) {
         // only handle Messages
         if(update->type != TelegramBotMessageType::Message) return;
-		
-		// simplify message access
+        
+        // simplify message access
         TelegramBotMessage& message = *update->message;		
-		
+        
         // send message (Format: Normal)
         TelegramBotMessage msgSent;
         bot.sendMessage(message.chat.id,
