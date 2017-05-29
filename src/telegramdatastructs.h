@@ -476,44 +476,47 @@ struct TelegramBotResponseParameters : public TelegramBotObject {
     qint32 migrateToChatId; /* Optional. The group has been migrated to a supergroup with the specified identifier. This number may be greater than 32 bits and some programming languages may have difficulty/silent defects in interpreting it. But it is smaller than 52 bits, so a signed 64 bit integer or double-precision float type are safe for storing this identifier. */\
     qint32 migrateFromChatId; /* Optional. The supergroup has been migrated from a group with the specified identifier. This number may be greater than 32 bits and some programming languages may have difficulty/silent defects in interpreting it. But it is smaller than 52 bits, so a signed 64 bit integer or double-precision float type are safe for storing this identifier. */\
 
+#define TELEGRAMBOTMESSAGE_FIELD_PARSING \
+    JsonHelperT<qint32>::jsonPathGet(object, "message_id", this->messageId); \
+    JsonHelperT<TelegramBotUser>::jsonPathGet(object, "from", this->from, false); \
+    JsonHelperT<qint32>::jsonPathGet(object, "date", this->date); \
+    JsonHelperT<TelegramBotChat>::jsonPathGet(object, "chat", this->chat, false); \
+    JsonHelperT<TelegramBotUser>::jsonPathGet(object, "forward_from", this->forwardFrom, false); \
+    JsonHelperT<TelegramBotChat>::jsonPathGet(object, "forward_from_chat", this->forwardFromChat, false); \
+    JsonHelperT<qint32>::jsonPathGet(object, "forward_from_message_id", this->forwardFromMessageId, false); \
+    JsonHelperT<qint32>::jsonPathGet(object, "forward_date", this->forwardDate, false); \
+    JsonHelperT<qint32>::jsonPathGet(object, "edit_date", this->editDate, false); \
+    JsonHelperT<QString>::jsonPathGet(object, "text", this->text, false); \
+    JsonHelperT<TelegramBotMessageEntity>::jsonPathGetArray(object, "entities", this->entities, false); \
+    JsonHelperT<TelegramBotAudio>::jsonPathGet(object, "audio", this->audio, false); \
+    JsonHelperT<TelegramBotDocument>::jsonPathGet(object, "document", this->document, false); \
+    JsonHelperT<TelegramBotGame>::jsonPathGet(object, "game", this->game, false); \
+    JsonHelperT<TelegramBotPhotoSize>::jsonPathGetArray(object, "photo", this->photo, false); \
+    JsonHelperT<TelegramBotSticker>::jsonPathGet(object, "sticker", this->sticker, false); \
+    JsonHelperT<TelegramBotVideo>::jsonPathGet(object, "video", this->video, false); \
+    JsonHelperT<TelegramBotVoice>::jsonPathGet(object, "voice", this->voice, false); \
+    JsonHelperT<QString>::jsonPathGet(object, "caption", this->caption, false); \
+    JsonHelperT<TelegramBotContact>::jsonPathGet(object, "contact", this->contact, false); \
+    JsonHelperT<TelegramBotLocation>::jsonPathGet(object, "location", this->location, false); \
+    JsonHelperT<TelegramBotVenue>::jsonPathGet(object, "venue", this->venue, false); \
+    JsonHelperT<TelegramBotUser>::jsonPathGet(object, "new_chat_member", this->newChatMember, false); \
+    JsonHelperT<TelegramBotUser>::jsonPathGet(object, "left_chat_member", this->leftChatMember, false); \
+    JsonHelperT<QString>::jsonPathGet(object, "new_chat_title", this->newChatTitle, false); \
+    JsonHelperT<TelegramBotPhotoSize>::jsonPathGetArray(object, "new_chat_photo", this->newChatPhoto, false); \
+    JsonHelperT<bool>::jsonPathGet(object, "delete_chat_photo = false", this->deleteChatPhoto, false); \
+    JsonHelperT<bool>::jsonPathGet(object, "group_chat_created = false", this->groupChatCreated, false); \
+    JsonHelperT<bool>::jsonPathGet(object, "supergroup_chat_created = false", this->supergroupChatCreated, false); \
+    JsonHelperT<bool>::jsonPathGet(object, "channel_chat_created = false", this->channelChatCreated, false); \
+    JsonHelperT<qint32>::jsonPathGet(object, "migrate_to_chat_id", this->migrateToChatId, false); \
+    JsonHelperT<qint32>::jsonPathGet(object, "migrate_from_chat_id", this->migrateFromChatId, false);
+
 // TelegramBotMessageSingle - This object represents a message (without any recursive fields which references to same class, see TelegramBotMessage for complete message)
 struct TelegramBotMessageSingle : public TelegramBotObject {
     TELEGRAMBOTMESSAGE_FIELDS
 
     // parse logic
     virtual void fromJson(QJsonObject& object) {
-        JsonHelperT<qint32>::jsonPathGet(object, "message_id", this->messageId);
-        JsonHelperT<TelegramBotUser>::jsonPathGet(object, "from", this->from, false);
-        JsonHelperT<qint32>::jsonPathGet(object, "date", this->date);
-        JsonHelperT<TelegramBotChat>::jsonPathGet(object, "chat", this->chat, false);
-        JsonHelperT<TelegramBotUser>::jsonPathGet(object, "forward_from", this->forwardFrom, false);
-        JsonHelperT<TelegramBotChat>::jsonPathGet(object, "forward_from_chat", this->forwardFromChat, false);
-        JsonHelperT<qint32>::jsonPathGet(object, "forward_from_message_id", this->forwardFromMessageId, false);
-        JsonHelperT<qint32>::jsonPathGet(object, "forward_date", this->forwardDate, false);
-        JsonHelperT<qint32>::jsonPathGet(object, "edit_date", this->editDate, false);
-        JsonHelperT<QString>::jsonPathGet(object, "text", this->text, false);
-        JsonHelperT<TelegramBotMessageEntity>::jsonPathGetArray(object, "entities", this->entities, false);
-        JsonHelperT<TelegramBotAudio>::jsonPathGet(object, "audio", this->audio, false);
-        JsonHelperT<TelegramBotDocument>::jsonPathGet(object, "document", this->document, false);
-        JsonHelperT<TelegramBotGame>::jsonPathGet(object, "game", this->game, false);
-        JsonHelperT<TelegramBotPhotoSize>::jsonPathGetArray(object, "photo", this->photo, false);
-        JsonHelperT<TelegramBotSticker>::jsonPathGet(object, "sticker", this->sticker, false);
-        JsonHelperT<TelegramBotVideo>::jsonPathGet(object, "video", this->video, false);
-        JsonHelperT<TelegramBotVoice>::jsonPathGet(object, "voice", this->voice, false);
-        JsonHelperT<QString>::jsonPathGet(object, "caption", this->caption, false);
-        JsonHelperT<TelegramBotContact>::jsonPathGet(object, "contact", this->contact, false);
-        JsonHelperT<TelegramBotLocation>::jsonPathGet(object, "location", this->location, false);
-        JsonHelperT<TelegramBotVenue>::jsonPathGet(object, "venue", this->venue, false);
-        JsonHelperT<TelegramBotUser>::jsonPathGet(object, "new_chat_member", this->newChatMember, false);
-        JsonHelperT<TelegramBotUser>::jsonPathGet(object, "left_chat_member", this->leftChatMember, false);
-        JsonHelperT<QString>::jsonPathGet(object, "new_chat_title", this->newChatTitle, false);
-        JsonHelperT<TelegramBotPhotoSize>::jsonPathGetArray(object, "new_chat_photo", this->newChatPhoto, false);
-        JsonHelperT<bool>::jsonPathGet(object, "delete_chat_photo = false", this->deleteChatPhoto, false);
-        JsonHelperT<bool>::jsonPathGet(object, "group_chat_created = false", this->groupChatCreated, false);
-        JsonHelperT<bool>::jsonPathGet(object, "supergroup_chat_created = false", this->supergroupChatCreated, false);
-        JsonHelperT<bool>::jsonPathGet(object, "channel_chat_created = false", this->channelChatCreated, false);
-        JsonHelperT<qint32>::jsonPathGet(object, "migrate_to_chat_id", this->migrateToChatId, false);
-        JsonHelperT<qint32>::jsonPathGet(object, "migrate_from_chat_id", this->migrateFromChatId, false);
+        TELEGRAMBOTMESSAGE_FIELD_PARSING
     }
 };
 
@@ -535,39 +538,8 @@ struct TelegramBotMessage : public TelegramBotObject {
 
     // parse logic
     virtual void fromJson(QJsonObject& object) {
-        // Message
-        JsonHelperT<qint32>::jsonPathGet(object, "message_id", this->messageId);
-        JsonHelperT<TelegramBotUser>::jsonPathGet(object, "from", this->from, false);
-        JsonHelperT<qint32>::jsonPathGet(object, "date", this->date);
-        JsonHelperT<TelegramBotChat>::jsonPathGet(object, "chat", this->chat, false);
-        JsonHelperT<TelegramBotUser>::jsonPathGet(object, "forward_from", this->forwardFrom, false);
-        JsonHelperT<TelegramBotChat>::jsonPathGet(object, "forward_from_chat", this->forwardFromChat, false);
-        JsonHelperT<qint32>::jsonPathGet(object, "forward_from_message_id", this->forwardFromMessageId, false);
-        JsonHelperT<qint32>::jsonPathGet(object, "forward_date", this->forwardDate, false);
-        JsonHelperT<qint32>::jsonPathGet(object, "edit_date", this->editDate, false);
-        JsonHelperT<QString>::jsonPathGet(object, "text", this->text, false);
-        JsonHelperT<TelegramBotMessageEntity>::jsonPathGetArray(object, "entities", this->entities, false);
-        JsonHelperT<TelegramBotAudio>::jsonPathGet(object, "audio", this->audio, false);
-        JsonHelperT<TelegramBotDocument>::jsonPathGet(object, "document", this->document, false);
-        JsonHelperT<TelegramBotGame>::jsonPathGet(object, "game", this->game, false);
-        JsonHelperT<TelegramBotPhotoSize>::jsonPathGetArray(object, "photo", this->photo, false);
-        JsonHelperT<TelegramBotSticker>::jsonPathGet(object, "sticker", this->sticker, false);
-        JsonHelperT<TelegramBotVideo>::jsonPathGet(object, "video", this->video, false);
-        JsonHelperT<TelegramBotVoice>::jsonPathGet(object, "voice", this->voice, false);
-        JsonHelperT<QString>::jsonPathGet(object, "caption", this->caption, false);
-        JsonHelperT<TelegramBotContact>::jsonPathGet(object, "contact", this->contact, false);
-        JsonHelperT<TelegramBotLocation>::jsonPathGet(object, "location", this->location, false);
-        JsonHelperT<TelegramBotVenue>::jsonPathGet(object, "venue", this->venue, false);
-        JsonHelperT<TelegramBotUser>::jsonPathGet(object, "new_chat_member", this->newChatMember, false);
-        JsonHelperT<TelegramBotUser>::jsonPathGet(object, "left_chat_member", this->leftChatMember, false);
-        JsonHelperT<QString>::jsonPathGet(object, "new_chat_title", this->newChatTitle, false);
-        JsonHelperT<TelegramBotPhotoSize>::jsonPathGetArray(object, "new_chat_photo", this->newChatPhoto, false);
-        JsonHelperT<bool>::jsonPathGet(object, "delete_chat_photo = false", this->deleteChatPhoto, false);
-        JsonHelperT<bool>::jsonPathGet(object, "group_chat_created = false", this->groupChatCreated, false);
-        JsonHelperT<bool>::jsonPathGet(object, "supergroup_chat_created = false", this->supergroupChatCreated, false);
-        JsonHelperT<bool>::jsonPathGet(object, "channel_chat_created = false", this->channelChatCreated, false);
-        JsonHelperT<qint32>::jsonPathGet(object, "migrate_to_chat_id", this->migrateToChatId, false);
-        JsonHelperT<qint32>::jsonPathGet(object, "migrate_from_chat_id", this->migrateFromChatId, false);
+        // message
+        TELEGRAMBOTMESSAGE_FIELD_PARSING
 
         // own data
         JsonHelperT<TelegramBotMessageSingle>::jsonPathGet(object, "reply_to_message", this->replyToMessage, false);
