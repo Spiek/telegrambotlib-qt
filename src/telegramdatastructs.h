@@ -47,6 +47,17 @@ enum class TelegramBotChatAction
     UploadVideoNote
 };
 
+enum TelegramBotMessageType {
+    Undefined,
+    Message,
+    EditedMessage,
+    ChannelPost,
+    EditedChannelPost,
+    InlineQuery,
+    ChosenInlineResult,
+    CallbackQuery
+};
+
 // TelegramBotOperationResult - This object represents a Telegram Operation result
 struct TelegramBotOperationResult : public TelegramBotObject {
     bool result;
@@ -523,16 +534,6 @@ struct TelegramBotMessageSingle : public TelegramBotObject {
 // TelegramBotMessage - This object represents a message.
 struct TelegramBotMessage : public TelegramBotObject {
     TELEGRAMBOTMESSAGE_FIELDS
-    enum Type {
-        Undefined,
-        Message,
-        EditedMessage,
-        ChannelPost,
-        EditedChannelPost,
-        InlineQuery,
-        ChosenInlineResult,
-        CallbackQuery
-    } type = Undefined;
     TelegramBotMessageSingle replyToMessage; // Optional. For replies, the original message. Note that the Message object in this field will not contain further reply_to_message fields even if it itself is a reply.
     TelegramBotMessageSingle pinnedMessage; // Optional. Specified message was pinned. Note that the Message object in this field will not contain further reply_to_message fields even if it is itself a reply.
 
@@ -1153,5 +1154,65 @@ struct TelegramBotChosenInlineResult : public TelegramBotObject {
         JsonHelperT<QString>::jsonPathGet(object, "query", this->query);
     }
 };
+
+// This object represents an incoming update.
+struct TelegramBotUpdatePrivate : public TelegramBotObject {
+    TelegramBotMessageType type = Undefined;
+    int updateId;
+    TelegramBotMessage*             message = 0;
+    TelegramBotInlineQuery*         inlineQuery = 0;
+    TelegramBotChosenInlineResult*  chosenInlineResult = 0;
+    TelegramBotCallbackQuery*       callbackQuery = 0;
+
+    virtual ~TelegramBotUpdatePrivate()
+    {
+        delete this->message;
+        delete this->inlineQuery;
+        delete this->chosenInlineResult;
+        delete this->callbackQuery;
+    }
+
+    virtual void fromJson(QJsonObject& object) {
+        for(auto itr = object.begin(); itr != object.end(); itr++) {
+            // parse update id
+            if(itr.key() == "update_id") {
+                this->updateId = itr.value().toVariant().toInt();
+                continue;
+            }
+
+            // parse type
+            this->type =   itr.key() == "message"              ? Message :
+                           itr.key() == "edited_message"       ? EditedMessage :
+                           itr.key() == "channel_post"         ? ChannelPost :
+                           itr.key() == "edited_channel_post"  ? EditedChannelPost :
+                           itr.key() == "inline_query"         ? InlineQuery :
+                           itr.key() == "chosen_inline_result" ? ChosenInlineResult :
+                           itr.key() == "callback_query"       ? CallbackQuery :
+                                                                 Undefined;
+
+            // simplify object
+            QJsonObject oMessage = itr.value().toObject();
+
+            // parse Message types
+            if(this->type == Message ||
+               this->type == EditedMessage ||
+               this->type == ChannelPost ||
+               this->type == EditedChannelPost)
+            {
+                (this->message = new TelegramBotMessage)->fromJson(oMessage);
+            }
+
+            // parse InlineQuery
+            else if(this->type == InlineQuery) (this->inlineQuery = new TelegramBotInlineQuery)->fromJson(oMessage);
+
+            // parse ChosenInlineResult
+            else if(this->type == ChosenInlineResult) (this->chosenInlineResult = new TelegramBotChosenInlineResult)->fromJson(oMessage);
+
+            // parse TelegramBotCallbackQuery
+            else if(this->type == CallbackQuery) (this->callbackQuery = new TelegramBotCallbackQuery)->fromJson(oMessage);
+        }
+    }
+};
+typedef QSharedPointer<TelegramBotUpdatePrivate> TelegramBotUpdate;
 
 #endif // TELEGRAMDATASTRUCTS_H

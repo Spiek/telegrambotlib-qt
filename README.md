@@ -103,7 +103,13 @@ int main(int argc, char** argv)
     QCoreApplication a(argc, argv);
 
     TelegramBot bot("APIKEY");
-    QObject::connect(&bot, &TelegramBot::newMessage, [&bot](TelegramBotMessage message) {
+    QObject::connect(&bot, &TelegramBot::newMessage, [&bot](TelegramBotUpdate update) {
+        // only handle Messages
+        if(update->type != TelegramBotMessageType::Message) return;
+		
+		// simplify message access
+        TelegramBotMessage& message = *update->message;		
+		
         // send message (Format: Normal)
         TelegramBotMessage msgSent;
         bot.sendMessage(message.chat.id,

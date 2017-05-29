@@ -619,49 +619,16 @@ void TelegramBot::parseMessage(QByteArray &data, bool singleMessage)
     // loop results
     for(QJsonValue result : singleMessage ? QJsonArray({oUpdate}) : oUpdate.value("result").toArray()) {
         QJsonObject update = result.toObject();
-        for(auto itr = update.begin(); itr != update.end(); itr++) {
-            // handle update id
-            if(itr.key() == "update_id") {
-                JsonHelper::jsonPathGet(update, "update_id", this->updateId);
-                continue;
-            }
 
-            // simplify object
-            QJsonObject oMessage = update.value(itr.key()).toObject();
+        // parse result
+        TelegramBotUpdate updateMessage(new TelegramBotUpdatePrivate);
+        updateMessage->fromJson(update);
 
-            // handle message fields
-            if(itr.key().endsWith("message") || itr.key().endsWith("post")) {
-                TelegramBotMessage message;
-                message.fromJson(oMessage);
-                message.type = itr.key() == "message"             ? TelegramBotMessage::Message :
-                               itr.key() == "edited_message"      ? TelegramBotMessage::EditedMessage :
-                               itr.key() == "channel_post"        ? TelegramBotMessage::ChannelPost :
-                               itr.key() == "edited_channel_post" ? TelegramBotMessage::EditedChannelPost :
-                                                                    TelegramBotMessage::Undefined;
-                emit this->newMessage(message);
-            }
+        // save update id
+        this->updateId = updateMessage->updateId;
 
-            // handle inline Query
-            else if(itr.key() == "inline_query") {
-                TelegramBotInlineQuery query;
-                query.fromJson(oMessage);
-                emit this->newInlineQuery(query);
-            }
-
-            // handle choosen inline result
-            else if(itr.key() == "chosen_inline_result") {
-                TelegramBotChosenInlineResult inlineResult;
-                inlineResult.fromJson(oMessage);
-                emit this->newChoosenInlineResult(inlineResult);
-            }
-
-            // handle callback Query
-            else if(itr.key() == "callback_query") {
-                TelegramBotCallbackQuery query;
-                query.fromJson(oMessage);
-                emit this->newCallbackQuery(query);
-            }
-        }
+        // send Message to outside world
+        emit this->newMessage(updateMessage);
     }
 }
 

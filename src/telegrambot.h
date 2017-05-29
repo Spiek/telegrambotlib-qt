@@ -35,10 +35,7 @@ class TelegramBot : public QObject
 {
     Q_OBJECT
     signals:
-        void newMessage(TelegramBotMessage message);
-        void newInlineQuery(TelegramBotInlineQuery inlineQuery);
-        void newChoosenInlineResult(TelegramBotChosenInlineResult choosenInlineResult);
-        void newCallbackQuery(TelegramBotCallbackQuery callbackQuery);
+        void newMessage(TelegramBotUpdate message);
 
     public:
         enum TelegramPollMessageTypes
