@@ -75,6 +75,7 @@ class TelegramBot : public QObject
             ForceReply                   = 1 << 9
         };
         TelegramBot(QString apikey, QObject *parent = 0);
+        ~TelegramBot();
 
         // Bot Functions
         TelegramBotUser getMe();
@@ -127,6 +128,9 @@ class TelegramBot : public QObject
         TelegramBotOperationResult deleteWebhookResult();
         TelegramBotWebHookInfo getWebhookInfo();
 
+        // Message Router functions
+        void messageRouterRegister(QString startWith, QDelegate<void(TelegramBotUpdate,TelegramBot&)> delegate, TelegramBotMessageType type = TelegramBotMessageType::All);
+
     private slots:
         // pull functions
         void pull();
@@ -164,6 +168,9 @@ class TelegramBot : public QObject
 
         // httpserver webhook
         static QMap<qint16, HttpServer*> webHookWebServers;
+
+        // message router
+        QMap<TelegramBotMessageType, QMap<QString, QDelegate<void(TelegramBotUpdate,TelegramBot&)>*>> messageRoutes;
 };
 
 /*

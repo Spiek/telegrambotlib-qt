@@ -48,14 +48,15 @@ enum class TelegramBotChatAction
 };
 
 enum TelegramBotMessageType {
-    Undefined,
-    Message,
-    EditedMessage,
-    ChannelPost,
-    EditedChannelPost,
-    InlineQuery,
-    ChosenInlineResult,
-    CallbackQuery
+    Undefined           = 0,
+    Message             = 1 << 0,
+    EditedMessage       = 1 << 1,
+    ChannelPost         = 1 << 2,
+    EditedChannelPost   = 1 << 3,
+    InlineQuery         = 1 << 4,
+    ChosenInlineResult  = 1 << 5,
+    CallbackQuery       = 1 << 6,
+    All                 = (2^7) - 1
 };
 
 // TelegramBotOperationResult - This object represents a Telegram Operation result
