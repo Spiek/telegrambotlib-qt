@@ -185,7 +185,7 @@ A possible use case for all types are also available in the example above.
 
 ### Message Routing
 In Addition the Library contains a message routing system.   
-This system allows you to route any kind of message to your own function (using a [QDelegate](https://github.com/Spiek/QDelegate)) 
+This system allows you to route any kind of message to your own functions (using a [QDelegate](https://github.com/Spiek/QDelegate)) 
 
 The following Code Example demonstrate this message routing, by handing the first /start-message a user send to a bot:
 ```c++
@@ -197,7 +197,7 @@ int main(int argc, char** argv)
     QCoreApplication a(argc, argv);
 
     TelegramBot bot("APIKEY");
-	bot.messageRouterRegister("/start", +[](TelegramBotUpdate update, TelegramBot& bot) {
+    bot.messageRouterRegister("/start", +[](TelegramBotUpdate update, TelegramBot& bot) {
         bot.sendMessage(update->message->chat.id, "Hi, i'am a Test bot");
     }, TelegramBotMessageType::Message);
     
