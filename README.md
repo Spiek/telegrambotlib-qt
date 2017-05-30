@@ -51,7 +51,7 @@ int main(int argc, char** argv)
 
 <details><summary>Message Polling (Webhook)</summary>
 
-The Webhook system tells the Telegram Server to call a secure public Web Url to deliver the user message   
+The Webhook system tells the Telegram Server to call a secure public Web Url to deliver the user message.   
 To make this possible the public url needs a valid certificate, either a valid public accpeted one or a self signed one.
 
 Here an easy example installation instruction which should work nearly for all kinds of setups (including NAT):
@@ -169,9 +169,10 @@ int main(int argc, char** argv)
 This example produces the following Telgram messages:  
 ![result](https://raw.githubusercontent.com/Spiek/telegrambotlib-qt/master/doc/readme-example-result.png)
 
-### Additional Notes
-File Handing  
-The library provides four different opportunities for sending a file to telegram
+----------
+
+### File Handing
+The library provides four different opportunities for sending a file to telegram:
 *  Web: just provide an web link as string
 *  Local file: just provide a local file path as string
 *  QBytearray: just call with a QBytearray which contains the data (The library also try to detect its content type!)
@@ -179,3 +180,29 @@ The library provides four different opportunities for sending a file to telegram
 
 Note: file uploades are handled asynyron!   
 A possible use case for all types are also available in the example above.
+
+----------
+
+### Message Routing
+In Addition the Library contains a message routing system.   
+This system allows you to route any kind of message to your own function (using a [QDelegate](https://github.com/Spiek/QDelegate)) 
+
+The following Code Example demonstrate this message routing, by handing the first /start-message a user send to a bot:
+```c++
+#include <QCoreApplication>
+#include "telegrambot.h"
+
+int main(int argc, char** argv)
+{
+    QCoreApplication a(argc, argv);
+
+    TelegramBot bot("APIKEY");
+	bot.messageRouterRegister("/start", +[](TelegramBotUpdate update, TelegramBot& bot) {
+        bot.sendMessage(update->message->chat.id, "Hi, i'am a Test bot");
+    }, TelegramBotMessageType::Message);
+    
+    bot.startMessagePulling();
+}
+```
+Additional Notes:
+* The example above only handles the /start message all other messages send to the bot are silently ignored.
