@@ -207,12 +207,13 @@ int main(int argc, char** argv)
 Additional Notes:
 * The example above only handles the /start message all other messages send to the bot are silently ignored.
 * The message Router match field depends on the received message type:
-  Message Type  | Fieldname | 
-   :-------- | :------- 
-   TelegramBotMessageType::Message | [Message](https://core.telegram.org/bots/api#message).text | 
-   TelegramBotMessageType::EditedMessage | [Message](https://core.telegram.org/bots/api#message).text | 
-   TelegramBotMessageType::ChannelPost | [Message](https://core.telegram.org/bots/api#message).text | 
-   TelegramBotMessageType::EditedChannelPost | [Message](https://core.telegram.org/bots/api#message).text | 
-   TelegramBotMessageType::InlineQuery | [InlineQuery](https://core.telegram.org/bots/api#inlinequery).query | 
-   TelegramBotMessageType::ChosenInlineResult | [ChosenInlineResult](https://core.telegram.org/bots/api#choseninlineresult).query | 
-   TelegramBotMessageType::CallbackQuery | [CallbackQuery](https://core.telegram.org/bots/api#callbackquery).data | 
+
+Message Type  | Fieldname | 
+:-------- | :------- 
+TelegramBotMessageType::Message | [Message](https://core.telegram.org/bots/api#message).text | 
+TelegramBotMessageType::EditedMessage | [Message](https://core.telegram.org/bots/api#message).text | 
+TelegramBotMessageType::ChannelPost | [Message](https://core.telegram.org/bots/api#message).text | 
+TelegramBotMessageType::EditedChannelPost | [Message](https://core.telegram.org/bots/api#message).text | 
+TelegramBotMessageType::InlineQuery | [InlineQuery](https://core.telegram.org/bots/api#inlinequery).query | 
+TelegramBotMessageType::ChosenInlineResult | [ChosenInlineResult](https://core.telegram.org/bots/api#choseninlineresult).query | 
+TelegramBotMessageType::CallbackQuery | [CallbackQuery](https://core.telegram.org/bots/api#callbackquery).data | 
