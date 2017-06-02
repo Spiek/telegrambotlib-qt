@@ -133,9 +133,9 @@ int main(int argc, char** argv)
                         {
                             // Keyboard
                             {
-                                { "Google", "https://www.google.com", "", "", "", false, false },
+                                TelegramBot::constructInlineButton("Google", "", "https://www.google.com"),
                             }, {
-                                { "Reply with data", "", "MYDATA1", "", "", false, false },
+                                TelegramBot::constructInlineButton("Reply with data", "MYDATA1"),
                             }
                         });
 

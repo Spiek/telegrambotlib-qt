@@ -74,6 +74,15 @@ class TelegramBot : public QObject
             // ForceReply
             ForceReply                   = 1 << 9
         };
+
+		// Keyboard construction helpers
+        static inline TelegramBotKeyboardButtonRequest constructTextButton(QString text, bool requestContact = false, bool requestLocation = false){
+            return TelegramBotKeyboardButtonRequest { text, QString(), QString(), QString(), QString(), requestContact, requestLocation };
+        }
+        static inline TelegramBotKeyboardButtonRequest constructInlineButton(QString text, QString callbackData, QString url = QString(), QString inlineQueryData = QString(), QString inlineQueryDataCurrentChat = QString()) {
+            return TelegramBotKeyboardButtonRequest { text, url, callbackData, inlineQueryData, inlineQueryDataCurrentChat, false, false };
+        }
+
         TelegramBot(QString apikey, QObject *parent = 0);
         ~TelegramBot();
 
