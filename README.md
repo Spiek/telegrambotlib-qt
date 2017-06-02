@@ -218,5 +218,7 @@ TelegramBotMessageType::InlineQuery | [InlineQuery](https://core.telegram.org/bo
 TelegramBotMessageType::ChosenInlineResult | [ChosenInlineResult](https://core.telegram.org/bots/api#choseninlineresult).query | 
 TelegramBotMessageType::CallbackQuery | [CallbackQuery](https://core.telegram.org/bots/api#callbackquery).data | 
 
+----------
+
 ### Licence
 The [telegrambotlib-qt licence](https://github.com/Spiek/telegrambotlib-qt/blob/master/LICENCE) is a modified version of the [LGPL](http://www.gnu.org/licenses/lgpl.html) licence, with a static linking exception.
