@@ -220,5 +220,44 @@ TelegramBotMessageType::CallbackQuery | [CallbackQuery](https://core.telegram.or
 
 ----------
 
+### Library Dependings
+The telegrambotlib-qt depends on [QDelegate](https://github.com/Spiek/QDelegate) which are allready included as submodule,  
+so we have to make sure that the submodules are checked out, too:
+```bash
+git clone --recursive <path>
+```
+Or if repo allready exists
+```bash
+git submodule update --init --recursive
+```
+
+----------
+
+### Compile Staticly:  
+Just add the following to your Qt-Project file:
+```qmake
+include(telegrambotlib-qt.pri)
+```
+**Include project syntax:**  
+#include "telegrambot.h"
+
+----------
+
+### Compile Dynamicly:   
+Note: The **make install** installation pathes, are printed to you during qmake!
+```
+qmake telegrambotlib-qt.pro
+make
+make install
+```
+add the following to your pro file:
+```qmake
+LIBS += -ltelegrambotlib-qt
+```
+**Include project syntax:**   
+#include <telegrambotlib-qt/telegrambot.h>
+
+----------
+
 ### Licence
 The [telegrambotlib-qt licence](https://github.com/Spiek/telegrambotlib-qt/blob/master/LICENCE) is a modified version of the [LGPL](http://www.gnu.org/licenses/lgpl.html) licence, with a static linking exception.
