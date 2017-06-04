@@ -1160,6 +1160,10 @@ struct TelegramBotChosenInlineResult : public TelegramBotObject {
 struct TelegramBotUpdatePrivate : public TelegramBotObject {
     TelegramBotMessageType type = Undefined;
     int updateId;
+
+	// Contains the message for the following Update types:
+	// Message, EditedMessage, ChannelPost, EditedChannelPost, CallbackQuery
+	// Special Case: points also to the Message of a CallbackQuery!
     TelegramBotMessage*             message = 0;
     TelegramBotInlineQuery*         inlineQuery = 0;
     TelegramBotChosenInlineResult*  chosenInlineResult = 0;
@@ -1167,7 +1171,7 @@ struct TelegramBotUpdatePrivate : public TelegramBotObject {
 
     virtual ~TelegramBotUpdatePrivate()
     {
-        delete this->message;
+        if(!this->callbackQuery) delete this->message;
         delete this->inlineQuery;
         delete this->chosenInlineResult;
         delete this->callbackQuery;
@@ -1211,6 +1215,10 @@ struct TelegramBotUpdatePrivate : public TelegramBotObject {
 
             // parse TelegramBotCallbackQuery
             else if(this->type == CallbackQuery) (this->callbackQuery = new TelegramBotCallbackQuery)->fromJson(oMessage);
+
+            /// some additional object simplifications
+            // if we have an callbackQuery set message to callbackQuery's message
+            if(this->callbackQuery) this->message = &this->callbackQuery->message;
         }
     }
 };

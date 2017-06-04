@@ -658,10 +658,10 @@ void TelegramBot::parseMessage(QByteArray &data, bool singleMessage)
         emit this->newMessage(updateMessage);
 
         // call message routes
-        QString routeData = updateMessage->message              ? updateMessage->message->text :
-                            updateMessage->inlineQuery          ? updateMessage->inlineQuery->query :
+        QString routeData = updateMessage->inlineQuery          ? updateMessage->inlineQuery->query :
                             updateMessage->chosenInlineResult   ? updateMessage->chosenInlineResult->query :
-                            updateMessage->callbackQuery        ? updateMessage->callbackQuery->data : QString();
+                            updateMessage->callbackQuery        ? updateMessage->callbackQuery->data :
+                            updateMessage->message              ? updateMessage->message->text : QString();
         if(routeData.isNull()) continue;
 
         for(TelegramBotMessageType type : {updateMessage->type, TelegramBotMessageType::All}) {
