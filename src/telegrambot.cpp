@@ -180,6 +180,11 @@ void TelegramBot::sendMessage(QVariant chatId, QString text, int replyToMessageI
 
 void TelegramBot::editMessageText(QVariant chatId, QVariant messageId, QString text, TelegramFlags flags, TelegramKeyboardRequest keyboard, bool *response)
 {
+    // if we have a null messageId, and user don't request a response, call send Message
+    if(!response && messageId.isNull()) {
+        return this->sendMessage(chatId, text, 0, flags, keyboard);
+    }
+
     // determine message id type
     bool isInlineMessageId = messageId.type() == QVariant::String;
 
