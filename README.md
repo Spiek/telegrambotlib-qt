@@ -197,7 +197,7 @@ int main(int argc, char** argv)
     QCoreApplication a(argc, argv);
 
     TelegramBot bot("APIKEY");
-    bot.messageRouterRegister("/start", [](TelegramBotUpdate update, TelegramBot& bot) {
+    bot.messageRouterRegister("/start", [&bot](TelegramBotUpdate update) {
         bot.sendMessage(update->message->chat.id, "Hi, i'am a Test bot");
     }, TelegramBotMessageType::Message);
     
