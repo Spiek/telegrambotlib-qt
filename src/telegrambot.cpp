@@ -6,10 +6,7 @@ TelegramBot::TelegramBot(QString apikey, QObject *parent) : QObject(parent), api
 
 TelegramBot::~TelegramBot()
 {
-	// delete message routes
-    for(auto& element : this->messageRoutes.values()) {
-        qDeleteAll(element.values());
-    }
+    qDeleteAll(this->messageRoutes);
 }
 
 /*
@@ -618,20 +615,14 @@ TelegramBotWebHookInfo TelegramBot::getWebhookInfo()
 /*
  *  Message Router functions
  */
-void TelegramBot::messageRouterRegister(QString startWith, QDelegate<void(TelegramBotUpdate)> delegate, TelegramBotMessageType type)
+void TelegramBot::messageRouterRegister(QString startWith, QDelegate<bool(TelegramBotUpdate)> delegate, TelegramBotMessageType type)
 {
-    // acquire message routes for type
-    auto& mapRoutes = this->messageRoutes.contains(type) ?
-                        this->messageRoutes.find(type).value() :
-                        this->messageRoutes.insert(type, QMap<QString, QDelegate<void(TelegramBotUpdate)>*>()).value();
-	
-	// acquire message route for startWith
-    auto mapRoute = mapRoutes.contains(startWith) ?
-                        mapRoutes.find(startWith).value() :
-                        mapRoutes.insert(startWith, new QDelegate<void(TelegramBotUpdate)>()).value();
-
-    // add invoke
-    mapRoute->addInvoke(delegate);
+    // save message route
+    this->messageRoutes.append(new MessageRoute {
+                                   type,
+                                   startWith,
+                                   delegate
+                               });
 }
 
 /*
@@ -668,15 +659,11 @@ void TelegramBot::parseMessage(QByteArray &data, bool singleMessage)
                             updateMessage->callbackQuery        ? updateMessage->callbackQuery->data :
                             updateMessage->message              ? updateMessage->message->text : QString();
         if(routeData.isNull()) continue;
-
-        for(TelegramBotMessageType type : {updateMessage->type, TelegramBotMessageType::All}) {
-            if(!this->messageRoutes.contains(type)) continue;
-            QMap<QString, QDelegate<void(TelegramBotUpdate)>*>& messageRoutes = this->messageRoutes.find(type).value();
-            for(auto itrRoute = messageRoutes.begin(); itrRoute != messageRoutes.end(); itrRoute++) {
-                if(itrRoute.key().startsWith(routeData)) {
-                    itrRoute.value()->invoke(updateMessage);
-                }
-            }
+        for(auto itrRoute = this->messageRoutes.begin(); itrRoute != this->messageRoutes.end(); itrRoute++) {
+            MessageRoute* route = *itrRoute;
+            if(route->type && updateMessage->type != updateMessage->type) continue;
+            if(!routeData.startsWith(route->startWith)) continue;
+            if(!route->delegate.invoke(updateMessage).first()) break;
         }
     }
 }

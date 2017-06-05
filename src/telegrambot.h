@@ -138,7 +138,7 @@ class TelegramBot : public QObject
         TelegramBotWebHookInfo getWebhookInfo();
 
         // Message Router functions
-        void messageRouterRegister(QString startWith, QDelegate<void(TelegramBotUpdate)> delegate, TelegramBotMessageType type = TelegramBotMessageType::All);
+        void messageRouterRegister(QString startWith, QDelegate<bool(TelegramBotUpdate)> delegate, TelegramBotMessageType type = TelegramBotMessageType::All);
 
     private slots:
         // pull functions
@@ -179,7 +179,13 @@ class TelegramBot : public QObject
         static QMap<qint16, HttpServer*> webHookWebServers;
 
         // message router
-        QMap<TelegramBotMessageType, QMap<QString, QDelegate<void(TelegramBotUpdate)>*>> messageRoutes;
+        struct MessageRoute
+        {
+            TelegramBotMessageType type;
+            QString startWith;
+            QDelegate<bool(TelegramBotUpdate)> delegate;
+        };
+        QList<MessageRoute*> messageRoutes;
 };
 
 /*
