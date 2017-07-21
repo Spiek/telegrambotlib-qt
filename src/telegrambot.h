@@ -82,6 +82,7 @@ class TelegramBot : public QObject
         static inline TelegramBotKeyboardButtonRequest constructInlineButton(QString text, QString callbackData, QString url = QString(), QString inlineQueryData = QString(), QString inlineQueryDataCurrentChat = QString()) {
             return TelegramBotKeyboardButtonRequest { text, url, callbackData, inlineQueryData, inlineQueryDataCurrentChat, false, false };
         }
+        static TelegramKeyboardRequest constructInlineMenu(QList<QString> menu, QString dataPattern, int page, int columns, int limit, QString lastPage = "");
 
         TelegramBot(QString apikey, QObject *parent = 0);
         ~TelegramBot();

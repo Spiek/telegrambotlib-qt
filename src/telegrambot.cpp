@@ -2,6 +2,44 @@
 
 QMap<qint16, HttpServer*> TelegramBot::webHookWebServers = QMap<qint16, HttpServer*>();
 
+
+TelegramKeyboardRequest TelegramBot::constructInlineMenu(QList<QString> menu, QString dataPattern, int page, int columns, int limit, QString lastPage)
+{
+    // generate time zone keyboard for continent
+    TelegramKeyboardRequest keyboard;
+    int column = 0;
+    for(QString menuEntry : !limit ? menu : menu.mid(!page ? 0 : (page * limit) - 1, limit)) {
+        if(!column || column == columns) {
+            keyboard.append(QList<TelegramBotKeyboardButtonRequest>());
+            column = 0;
+        }
+        keyboard.last().append(TelegramBot::constructInlineButton(menuEntry, QString(dataPattern).arg(menuEntry)));
+        column++;
+    }
+
+    // add back/forward button?
+    QString currentPage = !dataPattern.contains(".") ? QString(dataPattern).arg("") : dataPattern.left(dataPattern.lastIndexOf("."));
+    bool hasBackButton = page > 0;
+    bool hasForwardButton = limit && (page * limit) + limit < menu.length();
+
+    // construct menu row
+    if(!lastPage.isEmpty() || hasBackButton || hasForwardButton) {
+        keyboard.append(QList<TelegramBotKeyboardButtonRequest>{});
+    }
+    if(!lastPage.isEmpty()) {
+        keyboard.last().append({TelegramBot::constructInlineButton("Back", lastPage)});
+    }
+    if(hasBackButton) {
+        keyboard.last().append({TelegramBot::constructInlineButton("<", QString("%1..%2").arg(currentPage).arg(page - 1))});
+    }
+    if(hasForwardButton) {
+        keyboard.last().append({TelegramBot::constructInlineButton(">", QString("%1..%2").arg(currentPage).arg(page + 1))});
+    }
+
+    // return keyboard
+    return keyboard;
+}
+
 TelegramBot::TelegramBot(QString apikey, QObject *parent) : QObject(parent), apiKey(apikey) { }
 
 TelegramBot::~TelegramBot()
