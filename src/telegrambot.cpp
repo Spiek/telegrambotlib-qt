@@ -814,8 +814,8 @@ void TelegramBot::hanldeReplyMarkup(QUrlQuery& params, TelegramFlags flags, Tele
             for(TelegramBotKeyboardButtonRequest& column : row) {
                 keyboardContent += QString("%1{\"text\":\"%2\"").arg(firstColumn ? "" : ",", column.text);
                 if(flags && TelegramFlags::ReplyKeyboardMarkup) {
-                    if(!column.requestContact) keyboardContent += QString(",\"request_contact\":%1").arg(column.requestContact ? "true" : "false");
-                    if(!column.requestLocation) keyboardContent += QString(",\"request_location\":%1").arg(column.requestLocation ? "true" : "false");
+                    if(column.requestContact) keyboardContent += ",\"request_contact\":true";
+                    if(column.requestLocation) keyboardContent += ",\"request_location\":true";
                 } else {
                     if(!column.url.isEmpty()) keyboardContent += QString(",\"url\":\"%1\"").arg(column.url);
                     if(!column.callbackData.isEmpty()) keyboardContent += QString(",\"callback_data\":\"%1\"").arg(column.callbackData);
