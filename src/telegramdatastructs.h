@@ -109,6 +109,7 @@ struct TelegramBotUser : public TelegramBotObject {
     QString firstName; // User‘s or bot’s first name
     QString lastName; // Optional. User‘s or bot’s last name
     QString username; // Optional. User‘s or bot’s username
+    QString languageCode; // Optional. User‘s or bot’s locale
 
     TelegramBotUser() { }
     TelegramBotUser(QJsonObject object) { this->fromJson(object); }
@@ -119,6 +120,7 @@ struct TelegramBotUser : public TelegramBotObject {
         JsonHelperT<QString>::jsonPathGet(object, "first_name", this->firstName);
         JsonHelperT<QString>::jsonPathGet(object, "last_name", this->lastName, false);
         JsonHelperT<QString>::jsonPathGet(object, "username", this->username, false);
+        JsonHelperT<QString>::jsonPathGet(object, "language_code", this->languageCode, false);
     }
 };
 
