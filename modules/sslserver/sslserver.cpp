@@ -24,7 +24,8 @@ bool SSLServer::setPrivateKeyRaw(QByteArray &keyFileContent, QSsl::KeyAlgorithm 
 
 bool SSLServer::isSamePrivateKey(QString keyFile, QSsl::KeyAlgorithm algorithmn)
 {
-    return this->isSamePrivateKey(this->getFileContent(keyFile), algorithmn);
+    auto data = this->getFileContent(keyFile);
+    return this->isSamePrivateKey(data, algorithmn);
 }
 
 bool SSLServer::isSamePrivateKey(QByteArray &keyFileContent, QSsl::KeyAlgorithm algorithmn)

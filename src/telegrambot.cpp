@@ -673,8 +673,14 @@ void TelegramBot::parseMessage(QByteArray &data, bool singleMessage)
     QJsonObject oUpdate = QJsonDocument::fromJson(data, &jError).object();
 
     // handle parse error
-    if(jError.error != QJsonParseError::NoError || (!singleMessage && !JsonHelper::jsonPathGet(oUpdate, "ok").toBool())) {
+    if(jError.error != QJsonParseError::NoError) {
         return (void)qDebug("TelegramBot::parseMessage - Parse Error: %s", qPrintable(jError.errorString()));
+    }
+
+    if (!singleMessage && !JsonHelper::jsonPathGet(oUpdate, "ok").toBool()) {
+        return (void)qDebug("TelegramBot::parseMessage - Receive Error: %i - %s",
+                            JsonHelper::jsonPathGet(oUpdate, "error_code").toInt(),
+                            qPrintable(JsonHelper::jsonPathGet(oUpdate, "description").toString()));
     }
 
     // loop results
