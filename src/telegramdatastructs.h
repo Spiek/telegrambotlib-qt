@@ -18,8 +18,8 @@
     QString switchInlineQueryCurrentChat; \
      \
     /* normal keyboard */ \
-    bool requestContact; \
-    bool requestLocation;
+    bool requestContact = false; \
+    bool requestLocation = false;
 
 struct TelegramBotKeyboardButtonRequest
 {

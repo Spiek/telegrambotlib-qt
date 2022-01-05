@@ -164,7 +164,7 @@ class TelegramBot : public QObject
 
         // helpers
         QHttpMultiPart* createUploadFile(QString name, QString fileName, QByteArray& content, bool detectMimeType = false, QHttpMultiPart* multiPart = 0);
-        void hanldeReplyMarkup(QUrlQuery& params, TelegramFlags flags, TelegramKeyboardRequest& keyboard);
+        void handleReplyMarkup(QUrlQuery& params, TelegramFlags flags, TelegramKeyboardRequest& keyboard);
         QHttpMultiPart* handleFile(QString fieldName, QVariant file, QUrlQuery& params, QHttpMultiPart* multiPart = 0);
 
         // global data
