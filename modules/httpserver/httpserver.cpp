@@ -46,14 +46,15 @@ void HttpServer::handleNewData()
 
     // build response
     QByteArray responseContent;
-    responseContent += (response->version.isEmpty() ? "HTTP/1.1" : response->version) + " "; // Version
-    responseContent += QByteArray::number((qint32)response->status) + " " + response->StatusNames.value((qint32)response->status, "") + "\r\n"; // Status
+    responseContent += (response->version.isEmpty() ? "HTTP/1.1" : response->version.toUtf8()) + " "; // Version
+    responseContent += QByteArray::number((qint32)response->status) + " "
+            + response->StatusNames.value((qint32)response->status, "").toUtf8() + "\r\n"; // Status
 
     // add headers
     qint64 contentLength = 0;
     for(auto itr = response->headers.begin(); itr != response->headers.end(); itr++) {
         if(itr.key().toLower() == "content-length") contentLength = itr.value().toLongLong();
-        responseContent += itr.key() + ": " + itr.value() + "\r\n";
+        responseContent += itr.key().toUtf8() + ": " + itr.value().toUtf8() + "\r\n";
     }
 
     // add content length if not available
