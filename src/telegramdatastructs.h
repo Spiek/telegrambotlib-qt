@@ -18,8 +18,8 @@
     QString switchInlineQueryCurrentChat; \
      \
     /* normal keyboard */ \
-    bool requestContact; \
-    bool requestLocation;
+    bool requestContact = false; \
+    bool requestLocation = false;
 
 struct TelegramBotKeyboardButtonRequest
 {
@@ -234,7 +234,7 @@ typedef QList<QList<TelegramBotKeyboardButton>> TelegramKeyboard;
 
 // TelegramBotChat - This object represents a chat.
 struct TelegramBotChat : public TelegramBotObject {
-    qint32 id; // Unique identifier for this chat. This number may be greater than 32 bits and some programming languages may have difficulty/silent defects in interpreting it. But it is smaller than 52 bits, so a signed 64 bit integer or double-precision float type are safe for storing this identifier.
+    qint64  id; // Unique identifier for this chat. This number from now can be signed 64 bit integer or double-precision float type are safe for storing this identifier.
     QString type; // Type of chat, can be either “private”, “group”, “supergroup” or “channel”
     QString title; // Optional. Title, for supergroups, channels and group chats
     QString username; // Optional. Username, for private chats, supergroups and channels if available
@@ -247,7 +247,7 @@ struct TelegramBotChat : public TelegramBotObject {
 
     // parse logic
     virtual void fromJson(QJsonObject& object) {
-        JsonHelperT<qint32>::jsonPathGet(object, "id", this->id);
+        JsonHelperT<qint64>::jsonPathGet(object, "id", this->id);
         JsonHelperT<QString>::jsonPathGet(object, "type", this->type);
         JsonHelperT<QString>::jsonPathGet(object, "title", this->title, false);
         JsonHelperT<QString>::jsonPathGet(object, "username", this->username, false);
