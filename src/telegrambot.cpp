@@ -207,7 +207,7 @@ void TelegramBot::sendMessage(QVariant chatId, QString text, int replyToMessageI
     if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
 
     // handle reply markup
-    this->hanldeReplyMarkup(params, flags, keyboard);
+    this->handleReplyMarkup(params, flags, keyboard);
 
     // call api
     return this->callApiTemplate("sendMessage", params, response);
@@ -233,7 +233,7 @@ void TelegramBot::editMessageText(QVariant chatId, QVariant messageId, QString t
 
     // only build inline keyboard
     if(!(flags && TelegramFlags::ReplyKeyboardMarkup) && !(flags && TelegramFlags::ForceReply) && !(flags && TelegramFlags::ReplyKeyboardRemove)) {
-        this->hanldeReplyMarkup(params, flags, keyboard);
+        this->handleReplyMarkup(params, flags, keyboard);
     }
 
     // call api
@@ -251,7 +251,7 @@ void TelegramBot::editMessageCaption(QVariant chatId, QVariant messageId, QStrin
     if(!caption.isNull()) params.addQueryItem("caption", caption);
 
     // only build inline keyboard
-    this->hanldeReplyMarkup(params, TelegramFlags(), keyboard);
+    this->handleReplyMarkup(params, TelegramFlags(), keyboard);
 
     // call api
     this->callApiTemplate("editMessageCaption", params, response);
@@ -267,7 +267,7 @@ void TelegramBot::editMessageReplyMarkup(QVariant chatId, QVariant messageId, Te
     params.addQueryItem(isInlineMessageId ? "inline_message_id" : "message_id", messageId.toString());
 
     // only build inline keyboard
-    this->hanldeReplyMarkup(params, TelegramFlags(), keyboard);
+    this->handleReplyMarkup(params, TelegramFlags(), keyboard);
 
     // call api
     this->callApiTemplate("editMessageReplyMarkup", params, response);
@@ -305,7 +305,7 @@ void TelegramBot::sendPhoto(QVariant chatId, QVariant photo, QString caption, in
     if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
 
     // handle reply markup
-    this->hanldeReplyMarkup(params, flags, keyboard);
+    this->handleReplyMarkup(params, flags, keyboard);
 
     // handle file
     QHttpMultiPart* multiPart = this->handleFile("photo", photo, params);
@@ -326,7 +326,7 @@ void TelegramBot::sendAudio(QVariant chatId, QVariant audio, QString caption, QS
     if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
 
     // handle reply markup
-    this->hanldeReplyMarkup(params, flags, keyboard);
+    this->handleReplyMarkup(params, flags, keyboard);
 
     // handle file
     QHttpMultiPart* multiPart = this->handleFile("audio", audio, params);
@@ -344,7 +344,7 @@ void TelegramBot::sendDocument(QVariant chatId, QVariant document, QString capti
     if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
 
     // handle reply markup
-    this->hanldeReplyMarkup(params, flags, keyboard);
+    this->handleReplyMarkup(params, flags, keyboard);
 
     // handle file
     QHttpMultiPart* multiPart = this->handleFile("document", document, params);
@@ -361,7 +361,7 @@ void TelegramBot::sendSticker(QVariant chatId, QVariant sticker, int replyToMess
     if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
 
     // handle reply markup
-    this->hanldeReplyMarkup(params, flags, keyboard);
+    this->handleReplyMarkup(params, flags, keyboard);
 
     // handle file
     QHttpMultiPart* multiPart = this->handleFile("sticker", sticker, params);
@@ -382,7 +382,7 @@ void TelegramBot::sendVideo(QVariant chatId, QVariant video, QString caption, in
     if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
 
     // handle reply markup
-    this->hanldeReplyMarkup(params, flags, keyboard);
+    this->handleReplyMarkup(params, flags, keyboard);
 
     // handle file
     QHttpMultiPart* multiPart = this->handleFile("video", video, params);
@@ -401,7 +401,7 @@ void TelegramBot::sendVoice(QVariant chatId, QVariant voice, QString caption, in
     if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
 
     // handle reply markup
-    this->hanldeReplyMarkup(params, flags, keyboard);
+    this->handleReplyMarkup(params, flags, keyboard);
 
     // handle file
     QHttpMultiPart* multiPart = this->handleFile("voice", voice, params);
@@ -420,7 +420,7 @@ void TelegramBot::sendVideoNote(QVariant chatId, QVariant videoNote, int length,
     if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
 
     // handle reply markup
-    this->hanldeReplyMarkup(params, flags, keyboard);
+    this->handleReplyMarkup(params, flags, keyboard);
 
     // handle file
     QHttpMultiPart* multiPart = this->handleFile("video_note", videoNote, params);
@@ -439,7 +439,7 @@ void TelegramBot::sendLocation(QVariant chatId, double latitude, double longitud
     if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
 
     // handle reply markup
-    this->hanldeReplyMarkup(params, flags, keyboard);
+    this->handleReplyMarkup(params, flags, keyboard);
 
     // call api
     this->callApiTemplate("sendLocation", params, response);
@@ -458,7 +458,7 @@ void TelegramBot::sendVenue(QVariant chatId, double latitude, double longitude, 
     if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
 
     // handle reply markup
-    this->hanldeReplyMarkup(params, flags, keyboard);
+    this->handleReplyMarkup(params, flags, keyboard);
 
     // call api
     this->callApiTemplate("sendVenue", params, response);
@@ -475,7 +475,7 @@ void TelegramBot::sendContact(QVariant chatId, QString phoneNumber, QString firs
     if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
 
     // handle reply markup
-    this->hanldeReplyMarkup(params, flags, keyboard);
+    this->handleReplyMarkup(params, flags, keyboard);
 
     // call api
     this->callApiTemplate("sendContact", params, response);
@@ -791,7 +791,7 @@ QHttpMultiPart* TelegramBot::createUploadFile(QString name, QString fileName, QB
     return multiPart;
 }
 
-void TelegramBot::hanldeReplyMarkup(QUrlQuery& params, TelegramFlags flags, TelegramKeyboardRequest &keyboard)
+void TelegramBot::handleReplyMarkup(QUrlQuery& params, TelegramFlags flags, TelegramKeyboardRequest &keyboard)
 {
     // handle types
     QString replyMarkup;
