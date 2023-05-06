@@ -191,6 +191,36 @@ void TelegramBot::answerCallbackQuery(QString callbackQueryId, QString text, boo
     this->callApiTemplate("answerCallbackQuery", params, response);
 }
 
+void TelegramBot::answerInlineQuery(const QString inlineQueryId,
+                                    QList<TelegramBotInlineQueryResult*> &results ,
+                                    bool is_personal,
+                                    int cacheTime,
+                                    QString switch_pm_text,
+                                    QString switch_pm_parameter,
+                                    QString url,
+                                    bool *response) {
+    QUrlQuery params;
+    params.addQueryItem("inline_query_id", inlineQueryId);
+    QJsonArray formedResults;
+    for (auto result : results) {
+        QJsonObject resultObj;
+        result->toJson(resultObj);
+        formedResults.append(resultObj);
+        delete result;
+    }
+    if (!switch_pm_parameter.isEmpty())
+        params.addQueryItem("switch_pm_parameter", switch_pm_parameter);
+
+    if (!switch_pm_text.isEmpty())
+        params.addQueryItem("switch_pm_text", switch_pm_text);
+
+    params.addQueryItem("results", QJsonDocument(formedResults).toJson(QJsonDocument::Compact));
+    if(!url.isNull()) params.addQueryItem("url", url);
+    if (cacheTime > 0) params.addQueryItem("cache_time", QString::number(cacheTime));
+
+    this->callApiTemplate("answerInlineQuery", params, response);
+}
+
 
 /*
  * Message Functions

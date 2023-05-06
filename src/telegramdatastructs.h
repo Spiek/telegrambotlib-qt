@@ -605,6 +605,13 @@ struct TelegramBotInputMessageContent : public TelegramBotObject {
         JsonHelperT<QString>::jsonPathGet(object, "parse_mode", this->parseMode, false);
         JsonHelperT<bool>::jsonPathGet(object, "disable_web_page_preview", this->disableWebPagePreview, false);
     }
+    QJsonObject toJson() {
+        QJsonObject ret;
+        ret.insert("message_text", messageText);
+        if (!parseMode.isEmpty())
+            ret.insert("parse_mode", parseMode);
+        return ret;
+    }
 };
 
 // This object represents one result of an inline query. Telegram clients currently support results of the following 20 types:
@@ -613,16 +620,44 @@ struct TelegramBotInlineQueryResult : public TelegramBotObject {
     QString type; // Type of the result, must be article
     QString id; // Unique identifier for this result, 1-64 Bytes
     QString title; // Title of the result
-    TelegramBotInputMessageContent inputMessageContent; // Content of the message to be sent
     TelegramKeyboard replyMarkup; // Optional. Inline keyboard attached to the message
     QString url; // Optional. URL of the result
     bool hideUrl; // Optional. Pass True, if you don't want the URL to be shown in the message
-    QString description; // Optional. Short description of the result
     QString thumbUrl; // Optional. Url of the thumbnail for the result
     qint32 thumbWidth; // Optional. Thumbnail width
     qint32 thumbHeight; // Optional. Thumbnail height
 
-    virtual void fromJson(QJsonObject& object) {
+    virtual void fromJson(QJsonObject& object) override {
+        JsonHelperT<QString>::jsonPathGet(object, "type", this->type);
+        JsonHelperT<QString>::jsonPathGet(object, "id", this->id);
+        JsonHelperT<QString>::jsonPathGet(object, "title", this->title);
+        JsonHelperT<TelegramBotKeyboardButton>::jsonPathGetArrayArray(object, "reply_markup", this->replyMarkup, false);
+        JsonHelperT<QString>::jsonPathGet(object, "url", this->url, false);
+        JsonHelperT<bool>::jsonPathGet(object, "hide_url", this->hideUrl, false);
+        JsonHelperT<QString>::jsonPathGet(object, "thumb_url", this->thumbUrl, false);
+        JsonHelperT<qint32>::jsonPathGet(object, "thumb_width", this->thumbWidth, false);
+        JsonHelperT<qint32>::jsonPathGet(object, "thumb_height", this->thumbHeight, false);
+    }
+    virtual void toJson(QJsonObject & object) override {
+        object.insert("id",   id);
+        object.insert("type", type);
+        object.insert("title",   title);
+    }
+};
+
+// This object represents one result of an inline query. Telegram clients currently support results of the following 20 types:
+class TelegramBotInlineQueryResultArticle :
+        public TelegramBotInlineQueryResult {
+public:
+    TelegramBotInlineQueryResultArticle() {
+        type = "article";
+    }
+    TelegramBotInputMessageContent inputMessageContent; // Content of the message to be sent
+    QString description; // Optional. Short description of the result
+    QString thumbUrl; // Optional. Url of the thumbnail for the result
+    qint32 thumbWidth; // Optional. Thumbnail width
+    qint32 thumbHeight; // Optional. Thumbnail height
+    void fromJson(QJsonObject& object) override {
         JsonHelperT<QString>::jsonPathGet(object, "type", this->type);
         JsonHelperT<QString>::jsonPathGet(object, "id", this->id);
         JsonHelperT<QString>::jsonPathGet(object, "title", this->title);
@@ -634,6 +669,13 @@ struct TelegramBotInlineQueryResult : public TelegramBotObject {
         JsonHelperT<QString>::jsonPathGet(object, "thumb_url", this->thumbUrl, false);
         JsonHelperT<qint32>::jsonPathGet(object, "thumb_width", this->thumbWidth, false);
         JsonHelperT<qint32>::jsonPathGet(object, "thumb_height", this->thumbHeight, false);
+    }
+    void toJson(QJsonObject & object) override {
+        TelegramBotInlineQueryResult::toJson(object);
+        object.insert("input_message_content",
+                      inputMessageContent.toJson());
+        if (!description.isEmpty())
+            object.insert("description",   description);
     }
 };
 

@@ -6,6 +6,7 @@
 struct TelegramBotObject
 {
     virtual void fromJson(QJsonObject& object) = 0;
+    virtual void toJson(QJsonObject& object) {Q_UNUSED(object)};
     virtual ~TelegramBotObject() {}
 };
 

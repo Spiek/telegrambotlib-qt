@@ -107,7 +107,7 @@ class TelegramBot : public QObject
 
         // Callback Query Functions
         void answerCallbackQuery(QString callbackQueryId, QString text = QString(), bool showAlert = false, int cacheTime = 0, QString url = QString(), bool* response = 0);
-
+        void answerInlineQuery(const QString inlineQueryId, QList<TelegramBotInlineQueryResult *> &results, bool is_personal = false, int cacheTime=0, QString switch_pm_text="", QString switch_pm_parameter="", QString url="", bool* response = 0);
         // Message Functions
         void sendMessage(QVariant chatId, QString text, int replyToMessageId = 0, TelegramFlags flags = TelegramFlags::NoFlag, TelegramKeyboardRequest keyboard = TelegramKeyboardRequest(), TelegramBotMessage* response = 0);
         void editMessageText(QVariant chatId, QVariant messageId, QString text, TelegramFlags flags = TelegramFlags::NoFlag, TelegramKeyboardRequest keyboard = TelegramKeyboardRequest(), bool* response = 0);
