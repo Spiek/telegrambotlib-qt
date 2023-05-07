@@ -219,7 +219,7 @@ struct TelegramBotKeyboardButton : public TelegramBotObject
     TelegramBotGame callbackGame;
 
     // parse logic
-    virtual void fromJson(QJsonObject& object) {
+    virtual void fromJson(QJsonObject& object) override {
         JsonHelperT<QString>::jsonPathGet(object, "text", this->text);
         JsonHelperT<QString>::jsonPathGet(object, "url", this->url, false);
         JsonHelperT<QString>::jsonPathGet(object, "callback_data", this->callbackData, false);
@@ -228,6 +228,11 @@ struct TelegramBotKeyboardButton : public TelegramBotObject
         JsonHelperT<TelegramBotGame>::jsonPathGet(object, "callback_game", this->callbackGame, false);
         JsonHelperT<bool>::jsonPathGet(object, "request_contact", this->requestContact, false);
         JsonHelperT<bool>::jsonPathGet(object, "request_location", this->requestLocation, false);
+    }
+    void toJson(QJsonObject & object) override {
+        object.insert("text", text);
+        if (!callbackData.isEmpty())
+            object.insert("callback_data", callbackData);
     }
 };
 typedef QList<QList<TelegramBotKeyboardButton>> TelegramKeyboard;
@@ -642,6 +647,23 @@ struct TelegramBotInlineQueryResult : public TelegramBotObject {
         object.insert("id",   id);
         object.insert("type", type);
         object.insert("title",   title);
+        if (!replyMarkup.isEmpty()) {
+            QJsonArray keyboardJ;
+            for (const auto &keyboardRow : replyMarkup) {
+                QJsonArray keyboardLine;
+                for (auto keyboard : keyboardRow) {
+                    QJsonObject keyObj;
+                    keyboard.toJson(keyObj);
+
+                    keyboardLine.append(keyObj);
+                }
+                keyboardJ.append(keyboardLine);
+            }
+            QJsonObject inlineObj;
+            inlineObj.insert("inline_keyboard", keyboardJ);
+            object.insert("reply_markup", inlineObj);
+        }
+
     }
 };
 
