@@ -214,6 +214,8 @@ void TelegramBot::answerInlineQuery(const QString inlineQueryId,
     if (!switch_pm_text.isEmpty())
         params.addQueryItem("switch_pm_text", switch_pm_text);
 
+    params.addQueryItem("is_personal", is_personal?"true":"false");
+
     params.addQueryItem("results", QJsonDocument(formedResults).toJson(QJsonDocument::Compact));
     if(!url.isNull()) params.addQueryItem("url", url);
     if (cacheTime > 0) params.addQueryItem("cache_time", QString::number(cacheTime));
