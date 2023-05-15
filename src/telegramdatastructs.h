@@ -105,7 +105,7 @@ struct TelegramBotWebHookInfo : public TelegramBotObject {
 
 // TelegramBotUser - This object represents a Telegram user or bot.
 struct TelegramBotUser : public TelegramBotObject {
-    qint32 id; // Unique identifier for this user or bot
+    qint64 id; // Unique identifier for this user or bot
     QString firstName; // User‘s or bot’s first name
     QString lastName; // Optional. User‘s or bot’s last name
     QString username; // Optional. User‘s or bot’s username
@@ -116,7 +116,7 @@ struct TelegramBotUser : public TelegramBotObject {
 
     // parse logic
     virtual void fromJson(QJsonObject& object) {
-        JsonHelperT<qint32>::jsonPathGet(object, "id", this->id);
+        JsonHelperT<qint64>::jsonPathGet(object, "id", this->id);
         JsonHelperT<QString>::jsonPathGet(object, "first_name", this->firstName);
         JsonHelperT<QString>::jsonPathGet(object, "last_name", this->lastName, false);
         JsonHelperT<QString>::jsonPathGet(object, "username", this->username, false);
