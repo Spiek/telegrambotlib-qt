@@ -56,23 +56,24 @@ class TelegramBot : public QObject
 
             // Message
             Markdown                     = 1 << 0,
-            Html                         = 1 << 1,
-            DisableWebPagePreview        = 1 << 2,
-            DisableNotfication           = 1 << 3,
+            MarkDownV2                   = 1 << 1,
+            Html                         = 1 << 2,
+            DisableWebPagePreview        = 1 << 3,
+            DisableNotification           = 1 << 4,
 
             // Keyboard Global
-            Selective                    = 1 << 4,
+            Selective                    = 1 << 5,
 
             // ReplyKeyboardMarkup
-            ReplyKeyboardMarkup          = 1 << 5,
-            ResizeKeyboard               = 1 << 6,
-            OneTimeKeyboard              = 1 << 7,
+            ReplyKeyboardMarkup          = 1 << 6,
+            ResizeKeyboard               = 1 << 7,
+            OneTimeKeyboard              = 1 << 8,
 
             // ReplyKeyboardRemove
-            ReplyKeyboardRemove          = 1 << 8,
+            ReplyKeyboardRemove          = 1 << 9,
 
             // ForceReply
-            ForceReply                   = 1 << 9
+            ForceReply                   = 1 << 10
         };
 
 		// Keyboard construction helpers

@@ -620,11 +620,12 @@ struct TelegramBotInputMessageContent : public TelegramBotObject {
 };
 
 // This object represents one result of an inline query. Telegram clients currently support results of the following 20 types:
-struct TelegramBotInlineQueryResult : public TelegramBotObject {
-
+class TelegramBotInlineQueryResult : public TelegramBotObject {
+public:
     QString type; // Type of the result, must be article
     QString id; // Unique identifier for this result, 1-64 Bytes
     QString title; // Title of the result
+    QString description; // Optional. Short description of the result
     TelegramKeyboard replyMarkup; // Optional. Inline keyboard attached to the message
     QString url; // Optional. URL of the result
     bool hideUrl; // Optional. Pass True, if you don't want the URL to be shown in the message
@@ -636,6 +637,7 @@ struct TelegramBotInlineQueryResult : public TelegramBotObject {
         JsonHelperT<QString>::jsonPathGet(object, "type", this->type);
         JsonHelperT<QString>::jsonPathGet(object, "id", this->id);
         JsonHelperT<QString>::jsonPathGet(object, "title", this->title);
+        JsonHelperT<QString>::jsonPathGet(object, "description", this->description);
         JsonHelperT<TelegramBotKeyboardButton>::jsonPathGetArrayArray(object, "reply_markup", this->replyMarkup, false);
         JsonHelperT<QString>::jsonPathGet(object, "url", this->url, false);
         JsonHelperT<bool>::jsonPathGet(object, "hide_url", this->hideUrl, false);
@@ -647,6 +649,7 @@ struct TelegramBotInlineQueryResult : public TelegramBotObject {
         object.insert("id",   id);
         object.insert("type", type);
         object.insert("title",   title);
+        object.insert("description",   description);
         if (!replyMarkup.isEmpty()) {
             QJsonArray keyboardJ;
             for (const auto &keyboardRow : replyMarkup) {
@@ -675,19 +678,14 @@ public:
         type = "article";
     }
     TelegramBotInputMessageContent inputMessageContent; // Content of the message to be sent
-    QString description; // Optional. Short description of the result
     QString thumbUrl; // Optional. Url of the thumbnail for the result
     qint32 thumbWidth; // Optional. Thumbnail width
     qint32 thumbHeight; // Optional. Thumbnail height
     void fromJson(QJsonObject& object) override {
-        JsonHelperT<QString>::jsonPathGet(object, "type", this->type);
-        JsonHelperT<QString>::jsonPathGet(object, "id", this->id);
-        JsonHelperT<QString>::jsonPathGet(object, "title", this->title);
+        TelegramBotInlineQueryResult::fromJson(object);
         JsonHelperT<TelegramBotInputMessageContent>::jsonPathGet(object, "input_message_content", this->inputMessageContent);
-        JsonHelperT<TelegramBotKeyboardButton>::jsonPathGetArrayArray(object, "reply_markup", this->replyMarkup, false);
         JsonHelperT<QString>::jsonPathGet(object, "url", this->url, false);
         JsonHelperT<bool>::jsonPathGet(object, "hide_url", this->hideUrl, false);
-        JsonHelperT<QString>::jsonPathGet(object, "description", this->description, false);
         JsonHelperT<QString>::jsonPathGet(object, "thumb_url", this->thumbUrl, false);
         JsonHelperT<qint32>::jsonPathGet(object, "thumb_width", this->thumbWidth, false);
         JsonHelperT<qint32>::jsonPathGet(object, "thumb_height", this->thumbHeight, false);
@@ -997,25 +995,36 @@ struct TelegramBotInlineQueryResultGame : public TelegramBotObject {
 };
 
 // Represents a link to a photo stored on the Telegram servers. By default, this photo will be sent by the user with an optional caption. Alternatively, you can use inputMessageContent to send a message with the specified content instead of the photo.
-struct TelegramBotInlineQueryResultCachedPhoto : public TelegramBotObject {
-    QString type; // Type of the result, must be photo
-    QString id; // Unique identifier for this result, 1-64 bytes
+class TelegramBotInlineQueryResultCachedPhoto :
+        public TelegramBotInlineQueryResult {
+
+public:
+    TelegramBotInlineQueryResultCachedPhoto() {
+        type = "photo";
+    }
     QString photoFileId; // A valid file identifier of the photo
-    QString title; // Optional. Title for the result
-    QString description; // Optional. Short description of the result
     QString caption; // Optional. Caption of the photo to be sent, 0-200 characters
-    TelegramKeyboard replyMarkup; // Optional. Inline keyboard attached to the message
+    QString parseMode;
     TelegramBotInputMessageContent inputMessageContent; // Optional. Content of the message to be sent instead of the photo
 
-    virtual void fromJson(QJsonObject& object) {
-        JsonHelperT<QString>::jsonPathGet(object, "type", this->type);
-        JsonHelperT<QString>::jsonPathGet(object, "id", this->id);
+    virtual void fromJson(QJsonObject& object) override {
+        TelegramBotInlineQueryResult::fromJson(object);
         JsonHelperT<QString>::jsonPathGet(object, "photo_file_id", this->photoFileId);
-        JsonHelperT<QString>::jsonPathGet(object, "title", this->title, false);
-        JsonHelperT<QString>::jsonPathGet(object, "description", this->description, false);
         JsonHelperT<QString>::jsonPathGet(object, "caption", this->caption, false);
-        JsonHelperT<TelegramBotKeyboardButton>::jsonPathGetArrayArray(object, "reply_markup", this->replyMarkup, false);
+        JsonHelperT<QString>::jsonPathGet(object, "parse_mode", this->parseMode, false);
         JsonHelperT<TelegramBotInputMessageContent>::jsonPathGet(object, "input_message_content", this->inputMessageContent, false);
+    }
+    void toJson(QJsonObject & object) override {
+        TelegramBotInlineQueryResult::toJson(object);
+
+        object.insert("photo_file_id", photoFileId);
+        object.insert("caption", caption);
+        object.insert("parse_mode", parseMode);
+        if (!inputMessageContent.messageText.isEmpty())
+            object.insert("input_message_content",
+                          inputMessageContent.toJson());
+        if (!description.isEmpty())
+            object.insert("description",   description);
     }
 };
 

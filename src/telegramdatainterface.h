@@ -3,8 +3,9 @@
 
 #include "jsonhelper.h"
 
-struct TelegramBotObject
+class TelegramBotObject
 {
+public:
     virtual void fromJson(QJsonObject& object) = 0;
     virtual void toJson(QJsonObject& object) {Q_UNUSED(object)};
     virtual ~TelegramBotObject() {}
