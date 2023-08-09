@@ -56,23 +56,24 @@ class TelegramBot : public QObject
 
             // Message
             Markdown                     = 1 << 0,
-            Html                         = 1 << 1,
-            DisableWebPagePreview        = 1 << 2,
-            DisableNotfication           = 1 << 3,
+            MarkDownV2                   = 1 << 1,
+            Html                         = 1 << 2,
+            DisableWebPagePreview        = 1 << 3,
+            DisableNotification           = 1 << 4,
 
             // Keyboard Global
-            Selective                    = 1 << 4,
+            Selective                    = 1 << 5,
 
             // ReplyKeyboardMarkup
-            ReplyKeyboardMarkup          = 1 << 5,
-            ResizeKeyboard               = 1 << 6,
-            OneTimeKeyboard              = 1 << 7,
+            ReplyKeyboardMarkup          = 1 << 6,
+            ResizeKeyboard               = 1 << 7,
+            OneTimeKeyboard              = 1 << 8,
 
             // ReplyKeyboardRemove
-            ReplyKeyboardRemove          = 1 << 8,
+            ReplyKeyboardRemove          = 1 << 9,
 
             // ForceReply
-            ForceReply                   = 1 << 9
+            ForceReply                   = 1 << 10
         };
 
 		// Keyboard construction helpers
@@ -107,7 +108,7 @@ class TelegramBot : public QObject
 
         // Callback Query Functions
         void answerCallbackQuery(QString callbackQueryId, QString text = QString(), bool showAlert = false, int cacheTime = 0, QString url = QString(), bool* response = 0);
-
+        void answerInlineQuery(const QString inlineQueryId, QList<TelegramBotInlineQueryResult *> &results, bool is_personal = false, int cacheTime=0, QString switch_pm_text="", QString switch_pm_parameter="", QString url="", bool* response = 0);
         // Message Functions
         void sendMessage(QVariant chatId, QString text, int replyToMessageId = 0, TelegramFlags flags = TelegramFlags::NoFlag, TelegramKeyboardRequest keyboard = TelegramKeyboardRequest(), TelegramBotMessage* response = 0);
         void editMessageText(QVariant chatId, QVariant messageId, QString text, TelegramFlags flags = TelegramFlags::NoFlag, TelegramKeyboardRequest keyboard = TelegramKeyboardRequest(), bool* response = 0);
@@ -164,7 +165,7 @@ class TelegramBot : public QObject
 
         // helpers
         QHttpMultiPart* createUploadFile(QString name, QString fileName, QByteArray& content, bool detectMimeType = false, QHttpMultiPart* multiPart = 0);
-        void hanldeReplyMarkup(QUrlQuery& params, TelegramFlags flags, TelegramKeyboardRequest& keyboard);
+        void handleReplyMarkup(QUrlQuery& params, TelegramFlags flags, TelegramKeyboardRequest& keyboard);
         QHttpMultiPart* handleFile(QString fieldName, QVariant file, QUrlQuery& params, QHttpMultiPart* multiPart = 0);
 
         // global data

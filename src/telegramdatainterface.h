@@ -3,9 +3,11 @@
 
 #include "jsonhelper.h"
 
-struct TelegramBotObject
+class TelegramBotObject
 {
+public:
     virtual void fromJson(QJsonObject& object) = 0;
+    virtual void toJson(QJsonObject& object) {Q_UNUSED(object)};
     virtual ~TelegramBotObject() {}
 };
 
@@ -15,7 +17,11 @@ class JsonHelperT<T, typename std::enable_if<std::is_base_of<TelegramBotObject, 
     public:
         static bool jsonPathGet(QJsonValue data, QString path, T& target, bool showWarnings = true)
         {
-            QJsonObject object = showWarnings ? JsonHelper::jsonPathGet(data, path).toJsonObject() : JsonHelper::jsonPathGetSilent(data, path).toJsonObject();
+            QJsonObject object;
+            if (path.isEmpty())
+                object = data.toObject();
+            else
+                object = showWarnings ? JsonHelper::jsonPathGet(data, path).toJsonObject() : JsonHelper::jsonPathGetSilent(data, path).toJsonObject();
             if(object.isEmpty()) return false;
             target.fromJson(object);
             return true;

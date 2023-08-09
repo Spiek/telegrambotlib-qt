@@ -191,6 +191,38 @@ void TelegramBot::answerCallbackQuery(QString callbackQueryId, QString text, boo
     this->callApiTemplate("answerCallbackQuery", params, response);
 }
 
+void TelegramBot::answerInlineQuery(const QString inlineQueryId,
+                                    QList<TelegramBotInlineQueryResult*> &results ,
+                                    bool is_personal,
+                                    int cacheTime,
+                                    QString switch_pm_text,
+                                    QString switch_pm_parameter,
+                                    QString url,
+                                    bool *response) {
+    QUrlQuery params;
+    params.addQueryItem("inline_query_id", inlineQueryId);
+    QJsonArray formedResults;
+    for (auto result : results) {
+        QJsonObject resultObj;
+        result->toJson(resultObj);
+        formedResults.append(resultObj);
+        delete result;
+    }
+    if (!switch_pm_parameter.isEmpty())
+        params.addQueryItem("switch_pm_parameter", switch_pm_parameter);
+
+    if (!switch_pm_text.isEmpty())
+        params.addQueryItem("switch_pm_text", switch_pm_text);
+
+    params.addQueryItem("is_personal", is_personal?"true":"false");
+
+    params.addQueryItem("results", QJsonDocument(formedResults).toJson(QJsonDocument::Compact));
+    if(!url.isNull()) params.addQueryItem("url", url);
+    if (cacheTime > 0) params.addQueryItem("cache_time", QString::number(cacheTime));
+
+    this->callApiTemplate("answerInlineQuery", params, response);
+}
+
 
 /*
  * Message Functions
@@ -203,11 +235,11 @@ void TelegramBot::sendMessage(QVariant chatId, QString text, int replyToMessageI
     if(flags && TelegramFlags::Markdown) params.addQueryItem("parse_mode", "Markdown");
     else if(flags && TelegramFlags::Html) params.addQueryItem("parse_mode", "HTML");
     if(flags && TelegramFlags::DisableWebPagePreview) params.addQueryItem("disable_web_page_preview", "true");
-    if(flags && TelegramFlags::DisableNotfication) params.addQueryItem("disable_notification", "true");
+    if(flags && TelegramFlags::DisableNotification) params.addQueryItem("disable_notification", "true");
     if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
 
     // handle reply markup
-    this->hanldeReplyMarkup(params, flags, keyboard);
+    this->handleReplyMarkup(params, flags, keyboard);
 
     // call api
     return this->callApiTemplate("sendMessage", params, response);
@@ -233,7 +265,7 @@ void TelegramBot::editMessageText(QVariant chatId, QVariant messageId, QString t
 
     // only build inline keyboard
     if(!(flags && TelegramFlags::ReplyKeyboardMarkup) && !(flags && TelegramFlags::ForceReply) && !(flags && TelegramFlags::ReplyKeyboardRemove)) {
-        this->hanldeReplyMarkup(params, flags, keyboard);
+        this->handleReplyMarkup(params, flags, keyboard);
     }
 
     // call api
@@ -251,7 +283,7 @@ void TelegramBot::editMessageCaption(QVariant chatId, QVariant messageId, QStrin
     if(!caption.isNull()) params.addQueryItem("caption", caption);
 
     // only build inline keyboard
-    this->hanldeReplyMarkup(params, TelegramFlags(), keyboard);
+    this->handleReplyMarkup(params, TelegramFlags(), keyboard);
 
     // call api
     this->callApiTemplate("editMessageCaption", params, response);
@@ -267,7 +299,7 @@ void TelegramBot::editMessageReplyMarkup(QVariant chatId, QVariant messageId, Te
     params.addQueryItem(isInlineMessageId ? "inline_message_id" : "message_id", messageId.toString());
 
     // only build inline keyboard
-    this->hanldeReplyMarkup(params, TelegramFlags(), keyboard);
+    this->handleReplyMarkup(params, TelegramFlags(), keyboard);
 
     // call api
     this->callApiTemplate("editMessageReplyMarkup", params, response);
@@ -279,7 +311,7 @@ void TelegramBot::forwardMessage(QVariant targetChatId, QVariant fromChatId, qin
     params.addQueryItem("chat_id", targetChatId.toString());
     params.addQueryItem("from_chat_id", fromChatId.toString());
     params.addQueryItem("message_id", QString::number(fromMessageId));
-    if(flags && TelegramFlags::DisableNotfication) params.addQueryItem("disable_notification", "true");
+    if(flags && TelegramFlags::DisableNotification) params.addQueryItem("disable_notification", "true");
 
     this->callApiTemplate("forwardMessage", params, response);
 }
@@ -301,11 +333,15 @@ void TelegramBot::sendPhoto(QVariant chatId, QVariant photo, QString caption, in
     QUrlQuery params;
     params.addQueryItem("chat_id", chatId.toString());
     if(!caption.isNull()) params.addQueryItem("caption", caption);
-    if(flags && TelegramFlags::DisableNotfication) params.addQueryItem("disable_notification", "true");
+    if(flags && TelegramFlags::DisableNotification) params.addQueryItem("disable_notification", "true");
+    if(flags && TelegramFlags::Markdown) params.addQueryItem("parse_mode", "Markdown");
+    else if(flags && TelegramFlags::Html) params.addQueryItem("parse_mode", "HTML");
+    if(flags && TelegramFlags::MarkDownV2) params.addQueryItem("parse_mode", "MarkdownV2");
+
     if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
 
     // handle reply markup
-    this->hanldeReplyMarkup(params, flags, keyboard);
+    this->handleReplyMarkup(params, flags, keyboard);
 
     // handle file
     QHttpMultiPart* multiPart = this->handleFile("photo", photo, params);
@@ -322,11 +358,11 @@ void TelegramBot::sendAudio(QVariant chatId, QVariant audio, QString caption, QS
     if(duration >= 0) params.addQueryItem("duration", QString::number(duration));
     if(!performer.isNull()) params.addQueryItem("performer", performer);
     if(!title.isNull()) params.addQueryItem("title", title);
-    if(flags && TelegramFlags::DisableNotfication) params.addQueryItem("disable_notification", "true");
+    if(flags && TelegramFlags::DisableNotification) params.addQueryItem("disable_notification", "true");
     if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
 
     // handle reply markup
-    this->hanldeReplyMarkup(params, flags, keyboard);
+    this->handleReplyMarkup(params, flags, keyboard);
 
     // handle file
     QHttpMultiPart* multiPart = this->handleFile("audio", audio, params);
@@ -340,11 +376,11 @@ void TelegramBot::sendDocument(QVariant chatId, QVariant document, QString capti
     QUrlQuery params;
     params.addQueryItem("chat_id", chatId.toString());
     if(!caption.isNull()) params.addQueryItem("caption", caption);
-    if(flags && TelegramFlags::DisableNotfication) params.addQueryItem("disable_notification", "true");
+    if(flags && TelegramFlags::DisableNotification) params.addQueryItem("disable_notification", "true");
     if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
 
     // handle reply markup
-    this->hanldeReplyMarkup(params, flags, keyboard);
+    this->handleReplyMarkup(params, flags, keyboard);
 
     // handle file
     QHttpMultiPart* multiPart = this->handleFile("document", document, params);
@@ -357,11 +393,11 @@ void TelegramBot::sendSticker(QVariant chatId, QVariant sticker, int replyToMess
 {
     QUrlQuery params;
     params.addQueryItem("chat_id", chatId.toString());
-    if(flags && TelegramFlags::DisableNotfication) params.addQueryItem("disable_notification", "true");
+    if(flags && TelegramFlags::DisableNotification) params.addQueryItem("disable_notification", "true");
     if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
 
     // handle reply markup
-    this->hanldeReplyMarkup(params, flags, keyboard);
+    this->handleReplyMarkup(params, flags, keyboard);
 
     // handle file
     QHttpMultiPart* multiPart = this->handleFile("sticker", sticker, params);
@@ -378,11 +414,11 @@ void TelegramBot::sendVideo(QVariant chatId, QVariant video, QString caption, in
     if(duration >= 0) params.addQueryItem("duration", QString::number(duration));
     if(width >= 0) params.addQueryItem("width", QString::number(width));
     if(height >= 0) params.addQueryItem("height", QString::number(height));
-    if(flags && TelegramFlags::DisableNotfication) params.addQueryItem("disable_notification", "true");
+    if(flags && TelegramFlags::DisableNotification) params.addQueryItem("disable_notification", "true");
     if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
 
     // handle reply markup
-    this->hanldeReplyMarkup(params, flags, keyboard);
+    this->handleReplyMarkup(params, flags, keyboard);
 
     // handle file
     QHttpMultiPart* multiPart = this->handleFile("video", video, params);
@@ -397,11 +433,11 @@ void TelegramBot::sendVoice(QVariant chatId, QVariant voice, QString caption, in
     params.addQueryItem("chat_id", chatId.toString());
     if(!caption.isNull()) params.addQueryItem("caption", caption);
     if(duration >= 0) params.addQueryItem("duration", QString::number(duration));
-    if(flags && TelegramFlags::DisableNotfication) params.addQueryItem("disable_notification", "true");
+    if(flags && TelegramFlags::DisableNotification) params.addQueryItem("disable_notification", "true");
     if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
 
     // handle reply markup
-    this->hanldeReplyMarkup(params, flags, keyboard);
+    this->handleReplyMarkup(params, flags, keyboard);
 
     // handle file
     QHttpMultiPart* multiPart = this->handleFile("voice", voice, params);
@@ -416,11 +452,11 @@ void TelegramBot::sendVideoNote(QVariant chatId, QVariant videoNote, int length,
     params.addQueryItem("chat_id", chatId.toString());
     if(length >= 0) params.addQueryItem("length", QString::number(length));
     if(duration >= 0) params.addQueryItem("duration", QString::number(duration));
-    if(flags && TelegramFlags::DisableNotfication) params.addQueryItem("disable_notification", "true");
+    if(flags && TelegramFlags::DisableNotification) params.addQueryItem("disable_notification", "true");
     if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
 
     // handle reply markup
-    this->hanldeReplyMarkup(params, flags, keyboard);
+    this->handleReplyMarkup(params, flags, keyboard);
 
     // handle file
     QHttpMultiPart* multiPart = this->handleFile("video_note", videoNote, params);
@@ -435,11 +471,11 @@ void TelegramBot::sendLocation(QVariant chatId, double latitude, double longitud
     params.addQueryItem("chat_id", chatId.toString());
     params.addQueryItem("latitude", QString::number(latitude));
     params.addQueryItem("longitude", QString::number(longitude));
-    if(flags && TelegramFlags::DisableNotfication) params.addQueryItem("disable_notification", "true");
+    if(flags && TelegramFlags::DisableNotification) params.addQueryItem("disable_notification", "true");
     if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
 
     // handle reply markup
-    this->hanldeReplyMarkup(params, flags, keyboard);
+    this->handleReplyMarkup(params, flags, keyboard);
 
     // call api
     this->callApiTemplate("sendLocation", params, response);
@@ -454,11 +490,11 @@ void TelegramBot::sendVenue(QVariant chatId, double latitude, double longitude, 
     params.addQueryItem("title", title);
     params.addQueryItem("address", address);
     if(!foursquareId.isNull()) params.addQueryItem("foursquare_id", foursquareId);
-    if(flags && TelegramFlags::DisableNotfication) params.addQueryItem("disable_notification", "true");
+    if(flags && TelegramFlags::DisableNotification) params.addQueryItem("disable_notification", "true");
     if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
 
     // handle reply markup
-    this->hanldeReplyMarkup(params, flags, keyboard);
+    this->handleReplyMarkup(params, flags, keyboard);
 
     // call api
     this->callApiTemplate("sendVenue", params, response);
@@ -471,11 +507,11 @@ void TelegramBot::sendContact(QVariant chatId, QString phoneNumber, QString firs
     params.addQueryItem("phone_number", phoneNumber);
     params.addQueryItem("first_name", firstName);
     if(!lastName.isNull()) params.addQueryItem("last_name", lastName);
-    if(flags && TelegramFlags::DisableNotfication) params.addQueryItem("disable_notification", "true");
+    if(flags && TelegramFlags::DisableNotification) params.addQueryItem("disable_notification", "true");
     if(replyToMessageId) params.addQueryItem("reply_to_message_id", QString::number(replyToMessageId));
 
     // handle reply markup
-    this->hanldeReplyMarkup(params, flags, keyboard);
+    this->handleReplyMarkup(params, flags, keyboard);
 
     // call api
     this->callApiTemplate("sendContact", params, response);
@@ -754,8 +790,6 @@ QNetworkReply* TelegramBot::callApi(QString method, QUrlQuery params, bool delet
     QUrl url(QString("https://api.telegram.org/bot%1/%2").arg(this->apiKey, method));
     url.setQuery(params);
 
-    qDebug() << url;
-
     // execute
     QNetworkRequest request(url);
     QNetworkReply* reply = multiPart ? this->aManager.post(request, multiPart) : this->aManager.get(request);
@@ -793,7 +827,7 @@ QHttpMultiPart* TelegramBot::createUploadFile(QString name, QString fileName, QB
     return multiPart;
 }
 
-void TelegramBot::hanldeReplyMarkup(QUrlQuery& params, TelegramFlags flags, TelegramKeyboardRequest &keyboard)
+void TelegramBot::handleReplyMarkup(QUrlQuery& params, TelegramFlags flags, TelegramKeyboardRequest &keyboard)
 {
     // handle types
     QString replyMarkup;
